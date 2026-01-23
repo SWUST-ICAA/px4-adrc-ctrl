@@ -3,12 +3,12 @@
 //
 // Code generated for Simulink model 'uav_adrc'.
 //
-// Model version                  : 1.2
+// Model version                  : 1.4
 // Simulink Coder version         : 24.2 (R2024b) 21-Jun-2024
-// C/C++ source code generated on : Thu Jan 22 10:38:17 2026
+// C/C++ source code generated on : Thu Jan 22 20:28:50 2026
 //
 // Target selection: ert.tlc
-// Embedded hardware selection: Intel->x86-64 (Windows64)
+// Embedded hardware selection: Intel->x86-64 (Linux 64)
 // Code generation objectives: Unspecified
 // Validation result: Not run
 //
@@ -25,42 +25,89 @@ class uav_adrc final
  public:
   // Block states (default storage) for system '<Root>'
   struct DW_uav_adrc_T {
-    real_T UnitDelay_DSTATE[3];        // '<S21>/Unit Delay'
-    real_T UnitDelay_DSTATE_a[3];      // '<S10>/Unit Delay'
+    real_T UnitDelay_DSTATE[3];        // '<S25>/Unit Delay'
+    real_T UnitDelay_DSTATE_a[3];      // '<S14>/Unit Delay'
+    real_T UnitDelay_DSTATE_b[3];      // '<S47>/Unit Delay'
+    real_T UnitDelay_DSTATE_am[3];     // '<S69>/Unit Delay'
+    real_T UnitDelay_DSTATE_f[3];      // '<S36>/Unit Delay'
+    real_T UnitDelay_DSTATE_h[3];      // '<S58>/Unit Delay'
   };
 
   // Constant parameters (default storage)
   struct ConstP_uav_adrc_T {
-    // Expression: ad
-    //  Referenced by: '<S21>/Gain2'
-
-    real_T Gain2_Gain[9];
-
-    // Pooled Parameter (Expression: c)
+    // Pooled Parameter (Expression: ad)
     //  Referenced by:
-    //    '<S10>/Gain'
-    //    '<S21>/Gain'
+    //    '<S25>/Gain2'
+    //    '<S47>/Gain2'
+    //    '<S69>/Gain2'
 
-    real_T pooled2[3];
+    real_T pooled2[9];
 
-    // Expression: ad
-    //  Referenced by: '<S10>/Gain2'
+    // Pooled Parameter (Expression: bd)
+    //  Referenced by:
+    //    '<S25>/Gain3'
+    //    '<S47>/Gain3'
+    //    '<S69>/Gain3'
 
-    real_T Gain2_Gain_bn[9];
+    real_T pooled6[3];
+
+    // Pooled Parameter (Expression: ad*ld)
+    //  Referenced by:
+    //    '<S25>/Gain4'
+    //    '<S47>/Gain4'
+    //    '<S69>/Gain4'
+
+    real_T pooled7[3];
+
+    // Pooled Parameter (Expression: ad)
+    //  Referenced by:
+    //    '<S14>/Gain2'
+    //    '<S36>/Gain2'
+    //    '<S58>/Gain2'
+
+    real_T pooled8[9];
+
+    // Pooled Parameter (Expression: bd)
+    //  Referenced by:
+    //    '<S14>/Gain3'
+    //    '<S36>/Gain3'
+    //    '<S58>/Gain3'
+
+    real_T pooled11[3];
+
+    // Pooled Parameter (Expression: ad*ld)
+    //  Referenced by:
+    //    '<S14>/Gain4'
+    //    '<S36>/Gain4'
+    //    '<S58>/Gain4'
+
+    real_T pooled12[3];
   };
 
   // External inputs (root inport signals with default storage)
   struct ExtU_uav_adrc_T {
-    real_T PostionRef;                 // '<Root>/Postion Ref'
-    real_T PositionState;              // '<Root>/Position State'
-    real_T AttitudeRef;                // '<Root>/Attitude Ref'
-    real_T AttitudeState;              // '<Root>/Attitude State'
+    real_T XPostionRef;                // '<Root>/X Postion Ref '
+    real_T XPositionState;             // '<Root>/X Position State'
+    real_T XAttitudeRef;               // '<Root>/X Attitude Ref'
+    real_T XAttitudeState;             // '<Root>/X Attitude State'
+    real_T YPostionRef;                // '<Root>/Y Postion Ref'
+    real_T YPositionState;             // '<Root>/Y Position State'
+    real_T ZPostionRef;                // '<Root>/Z Postion Ref '
+    real_T ZPositionState;             // '<Root>/Z Position State'
+    real_T YAttitudeRef;               // '<Root>/Y Attitude Ref'
+    real_T YAttitudeState;             // '<Root>/Y Attitude State'
+    real_T ZAttitudeRef;               // '<Root>/Z Attitude Ref'
+    real_T ZAttitudeState;             // '<Root>/Z Attitude State'
   };
 
   // External outputs (root outports fed by signals with default storage)
   struct ExtY_uav_adrc_T {
-    real_T Acceleration;               // '<Root>/Acceleration'
-    real_T Torque;                     // '<Root>/Torque'
+    real_T XAcceleration;              // '<Root>/X Acceleration'
+    real_T XTorque;                    // '<Root>/X Torque'
+    real_T YAcceleration;              // '<Root>/Y Acceleration'
+    real_T ZAcceleration;              // '<Root>/Z Acceleration'
+    real_T YTorque;                    // '<Root>/Y Torque'
+    real_T ZTorque;                    // '<Root>/Z Torque'
   };
 
   // Real-time Model Data Structure
@@ -74,7 +121,7 @@ class uav_adrc final
 
     struct {
       struct {
-        uint8_T TID[3];
+        uint8_T TID[2];
       } TaskCounters;
     } Timing;
 
@@ -145,13 +192,27 @@ extern const uav_adrc::ConstP_uav_adrc_T uav_adrc_ConstP;
 //-
 //  These blocks were eliminated from the model due to optimizations:
 //
-//  Block '<S9>/Gain1' : Eliminated nontunable gain of 1
-//  Block '<S12>/Zero-Order Hold' : Eliminated since input and output rates are identical
-//  Block '<S13>/Zero-Order Hold' : Eliminated since input and output rates are identical
-//  Block '<S20>/Gain' : Eliminated nontunable gain of 1
-//  Block '<S20>/Gain1' : Eliminated nontunable gain of 1
-//  Block '<S23>/Zero-Order Hold' : Eliminated since input and output rates are identical
-//  Block '<S24>/Zero-Order Hold' : Eliminated since input and output rates are identical
+//  Block '<S13>/Gain1' : Eliminated nontunable gain of 1
+//  Block '<S16>/Zero-Order Hold' : Eliminated since input and output rates are identical
+//  Block '<S17>/Zero-Order Hold' : Eliminated since input and output rates are identical
+//  Block '<S24>/Gain' : Eliminated nontunable gain of 1
+//  Block '<S24>/Gain1' : Eliminated nontunable gain of 1
+//  Block '<S27>/Zero-Order Hold' : Eliminated since input and output rates are identical
+//  Block '<S28>/Zero-Order Hold' : Eliminated since input and output rates are identical
+//  Block '<S35>/Gain1' : Eliminated nontunable gain of 1
+//  Block '<S38>/Zero-Order Hold' : Eliminated since input and output rates are identical
+//  Block '<S39>/Zero-Order Hold' : Eliminated since input and output rates are identical
+//  Block '<S46>/Gain' : Eliminated nontunable gain of 1
+//  Block '<S46>/Gain1' : Eliminated nontunable gain of 1
+//  Block '<S49>/Zero-Order Hold' : Eliminated since input and output rates are identical
+//  Block '<S50>/Zero-Order Hold' : Eliminated since input and output rates are identical
+//  Block '<S57>/Gain1' : Eliminated nontunable gain of 1
+//  Block '<S60>/Zero-Order Hold' : Eliminated since input and output rates are identical
+//  Block '<S61>/Zero-Order Hold' : Eliminated since input and output rates are identical
+//  Block '<S68>/Gain' : Eliminated nontunable gain of 1
+//  Block '<S68>/Gain1' : Eliminated nontunable gain of 1
+//  Block '<S71>/Zero-Order Hold' : Eliminated since input and output rates are identical
+//  Block '<S72>/Zero-Order Hold' : Eliminated since input and output rates are identical
 
 
 //-
@@ -169,30 +230,78 @@ extern const uav_adrc::ConstP_uav_adrc_T uav_adrc_ConstP;
 //  Here is the system hierarchy for this model
 //
 //  '<Root>' : 'uav_adrc'
-//  '<S1>'   : 'uav_adrc/Attitude Active Disturbance Rejection Control1'
-//  '<S2>'   : 'uav_adrc/Postion Active Disturbance Rejection Control'
-//  '<S3>'   : 'uav_adrc/Attitude Active Disturbance Rejection Control1/ADRC'
-//  '<S4>'   : 'uav_adrc/Attitude Active Disturbance Rejection Control1/ADRC/error feedback'
-//  '<S5>'   : 'uav_adrc/Attitude Active Disturbance Rejection Control1/ADRC/extended state observer'
-//  '<S6>'   : 'uav_adrc/Attitude Active Disturbance Rejection Control1/ADRC/input saturation'
-//  '<S7>'   : 'uav_adrc/Attitude Active Disturbance Rejection Control1/ADRC/rZOH'
-//  '<S8>'   : 'uav_adrc/Attitude Active Disturbance Rejection Control1/ADRC/yZOH'
-//  '<S9>'   : 'uav_adrc/Attitude Active Disturbance Rejection Control1/ADRC/error feedback/seccond order'
-//  '<S10>'  : 'uav_adrc/Attitude Active Disturbance Rejection Control1/ADRC/extended state observer/discrete time'
-//  '<S11>'  : 'uav_adrc/Attitude Active Disturbance Rejection Control1/ADRC/input saturation/passthrough'
-//  '<S12>'  : 'uav_adrc/Attitude Active Disturbance Rejection Control1/ADRC/rZOH/enabled'
-//  '<S13>'  : 'uav_adrc/Attitude Active Disturbance Rejection Control1/ADRC/yZOH/enabled'
-//  '<S14>'  : 'uav_adrc/Postion Active Disturbance Rejection Control/ADRC'
-//  '<S15>'  : 'uav_adrc/Postion Active Disturbance Rejection Control/ADRC/error feedback'
-//  '<S16>'  : 'uav_adrc/Postion Active Disturbance Rejection Control/ADRC/extended state observer'
-//  '<S17>'  : 'uav_adrc/Postion Active Disturbance Rejection Control/ADRC/input saturation'
-//  '<S18>'  : 'uav_adrc/Postion Active Disturbance Rejection Control/ADRC/rZOH'
-//  '<S19>'  : 'uav_adrc/Postion Active Disturbance Rejection Control/ADRC/yZOH'
-//  '<S20>'  : 'uav_adrc/Postion Active Disturbance Rejection Control/ADRC/error feedback/seccond order'
-//  '<S21>'  : 'uav_adrc/Postion Active Disturbance Rejection Control/ADRC/extended state observer/discrete time'
-//  '<S22>'  : 'uav_adrc/Postion Active Disturbance Rejection Control/ADRC/input saturation/passthrough'
-//  '<S23>'  : 'uav_adrc/Postion Active Disturbance Rejection Control/ADRC/rZOH/enabled'
-//  '<S24>'  : 'uav_adrc/Postion Active Disturbance Rejection Control/ADRC/yZOH/enabled'
+//  '<S1>'   : 'uav_adrc/X Attitude Active Disturbance Rejection Control'
+//  '<S2>'   : 'uav_adrc/X Postion Active Disturbance Rejection Control'
+//  '<S3>'   : 'uav_adrc/Y Attitude Active Disturbance Rejection Control'
+//  '<S4>'   : 'uav_adrc/Y Postion Active Disturbance Rejection Control'
+//  '<S5>'   : 'uav_adrc/Z Attitude Active Disturbance Rejection Control'
+//  '<S6>'   : 'uav_adrc/Z Postion Active Disturbance Rejection Control'
+//  '<S7>'   : 'uav_adrc/X Attitude Active Disturbance Rejection Control/ADRC'
+//  '<S8>'   : 'uav_adrc/X Attitude Active Disturbance Rejection Control/ADRC/error feedback'
+//  '<S9>'   : 'uav_adrc/X Attitude Active Disturbance Rejection Control/ADRC/extended state observer'
+//  '<S10>'  : 'uav_adrc/X Attitude Active Disturbance Rejection Control/ADRC/input saturation'
+//  '<S11>'  : 'uav_adrc/X Attitude Active Disturbance Rejection Control/ADRC/rZOH'
+//  '<S12>'  : 'uav_adrc/X Attitude Active Disturbance Rejection Control/ADRC/yZOH'
+//  '<S13>'  : 'uav_adrc/X Attitude Active Disturbance Rejection Control/ADRC/error feedback/seccond order'
+//  '<S14>'  : 'uav_adrc/X Attitude Active Disturbance Rejection Control/ADRC/extended state observer/discrete time'
+//  '<S15>'  : 'uav_adrc/X Attitude Active Disturbance Rejection Control/ADRC/input saturation/passthrough'
+//  '<S16>'  : 'uav_adrc/X Attitude Active Disturbance Rejection Control/ADRC/rZOH/enabled'
+//  '<S17>'  : 'uav_adrc/X Attitude Active Disturbance Rejection Control/ADRC/yZOH/enabled'
+//  '<S18>'  : 'uav_adrc/X Postion Active Disturbance Rejection Control/ADRC'
+//  '<S19>'  : 'uav_adrc/X Postion Active Disturbance Rejection Control/ADRC/error feedback'
+//  '<S20>'  : 'uav_adrc/X Postion Active Disturbance Rejection Control/ADRC/extended state observer'
+//  '<S21>'  : 'uav_adrc/X Postion Active Disturbance Rejection Control/ADRC/input saturation'
+//  '<S22>'  : 'uav_adrc/X Postion Active Disturbance Rejection Control/ADRC/rZOH'
+//  '<S23>'  : 'uav_adrc/X Postion Active Disturbance Rejection Control/ADRC/yZOH'
+//  '<S24>'  : 'uav_adrc/X Postion Active Disturbance Rejection Control/ADRC/error feedback/seccond order'
+//  '<S25>'  : 'uav_adrc/X Postion Active Disturbance Rejection Control/ADRC/extended state observer/discrete time'
+//  '<S26>'  : 'uav_adrc/X Postion Active Disturbance Rejection Control/ADRC/input saturation/passthrough'
+//  '<S27>'  : 'uav_adrc/X Postion Active Disturbance Rejection Control/ADRC/rZOH/enabled'
+//  '<S28>'  : 'uav_adrc/X Postion Active Disturbance Rejection Control/ADRC/yZOH/enabled'
+//  '<S29>'  : 'uav_adrc/Y Attitude Active Disturbance Rejection Control/ADRC'
+//  '<S30>'  : 'uav_adrc/Y Attitude Active Disturbance Rejection Control/ADRC/error feedback'
+//  '<S31>'  : 'uav_adrc/Y Attitude Active Disturbance Rejection Control/ADRC/extended state observer'
+//  '<S32>'  : 'uav_adrc/Y Attitude Active Disturbance Rejection Control/ADRC/input saturation'
+//  '<S33>'  : 'uav_adrc/Y Attitude Active Disturbance Rejection Control/ADRC/rZOH'
+//  '<S34>'  : 'uav_adrc/Y Attitude Active Disturbance Rejection Control/ADRC/yZOH'
+//  '<S35>'  : 'uav_adrc/Y Attitude Active Disturbance Rejection Control/ADRC/error feedback/seccond order'
+//  '<S36>'  : 'uav_adrc/Y Attitude Active Disturbance Rejection Control/ADRC/extended state observer/discrete time'
+//  '<S37>'  : 'uav_adrc/Y Attitude Active Disturbance Rejection Control/ADRC/input saturation/passthrough'
+//  '<S38>'  : 'uav_adrc/Y Attitude Active Disturbance Rejection Control/ADRC/rZOH/enabled'
+//  '<S39>'  : 'uav_adrc/Y Attitude Active Disturbance Rejection Control/ADRC/yZOH/enabled'
+//  '<S40>'  : 'uav_adrc/Y Postion Active Disturbance Rejection Control/ADRC'
+//  '<S41>'  : 'uav_adrc/Y Postion Active Disturbance Rejection Control/ADRC/error feedback'
+//  '<S42>'  : 'uav_adrc/Y Postion Active Disturbance Rejection Control/ADRC/extended state observer'
+//  '<S43>'  : 'uav_adrc/Y Postion Active Disturbance Rejection Control/ADRC/input saturation'
+//  '<S44>'  : 'uav_adrc/Y Postion Active Disturbance Rejection Control/ADRC/rZOH'
+//  '<S45>'  : 'uav_adrc/Y Postion Active Disturbance Rejection Control/ADRC/yZOH'
+//  '<S46>'  : 'uav_adrc/Y Postion Active Disturbance Rejection Control/ADRC/error feedback/seccond order'
+//  '<S47>'  : 'uav_adrc/Y Postion Active Disturbance Rejection Control/ADRC/extended state observer/discrete time'
+//  '<S48>'  : 'uav_adrc/Y Postion Active Disturbance Rejection Control/ADRC/input saturation/passthrough'
+//  '<S49>'  : 'uav_adrc/Y Postion Active Disturbance Rejection Control/ADRC/rZOH/enabled'
+//  '<S50>'  : 'uav_adrc/Y Postion Active Disturbance Rejection Control/ADRC/yZOH/enabled'
+//  '<S51>'  : 'uav_adrc/Z Attitude Active Disturbance Rejection Control/ADRC'
+//  '<S52>'  : 'uav_adrc/Z Attitude Active Disturbance Rejection Control/ADRC/error feedback'
+//  '<S53>'  : 'uav_adrc/Z Attitude Active Disturbance Rejection Control/ADRC/extended state observer'
+//  '<S54>'  : 'uav_adrc/Z Attitude Active Disturbance Rejection Control/ADRC/input saturation'
+//  '<S55>'  : 'uav_adrc/Z Attitude Active Disturbance Rejection Control/ADRC/rZOH'
+//  '<S56>'  : 'uav_adrc/Z Attitude Active Disturbance Rejection Control/ADRC/yZOH'
+//  '<S57>'  : 'uav_adrc/Z Attitude Active Disturbance Rejection Control/ADRC/error feedback/seccond order'
+//  '<S58>'  : 'uav_adrc/Z Attitude Active Disturbance Rejection Control/ADRC/extended state observer/discrete time'
+//  '<S59>'  : 'uav_adrc/Z Attitude Active Disturbance Rejection Control/ADRC/input saturation/passthrough'
+//  '<S60>'  : 'uav_adrc/Z Attitude Active Disturbance Rejection Control/ADRC/rZOH/enabled'
+//  '<S61>'  : 'uav_adrc/Z Attitude Active Disturbance Rejection Control/ADRC/yZOH/enabled'
+//  '<S62>'  : 'uav_adrc/Z Postion Active Disturbance Rejection Control/ADRC'
+//  '<S63>'  : 'uav_adrc/Z Postion Active Disturbance Rejection Control/ADRC/error feedback'
+//  '<S64>'  : 'uav_adrc/Z Postion Active Disturbance Rejection Control/ADRC/extended state observer'
+//  '<S65>'  : 'uav_adrc/Z Postion Active Disturbance Rejection Control/ADRC/input saturation'
+//  '<S66>'  : 'uav_adrc/Z Postion Active Disturbance Rejection Control/ADRC/rZOH'
+//  '<S67>'  : 'uav_adrc/Z Postion Active Disturbance Rejection Control/ADRC/yZOH'
+//  '<S68>'  : 'uav_adrc/Z Postion Active Disturbance Rejection Control/ADRC/error feedback/seccond order'
+//  '<S69>'  : 'uav_adrc/Z Postion Active Disturbance Rejection Control/ADRC/extended state observer/discrete time'
+//  '<S70>'  : 'uav_adrc/Z Postion Active Disturbance Rejection Control/ADRC/input saturation/passthrough'
+//  '<S71>'  : 'uav_adrc/Z Postion Active Disturbance Rejection Control/ADRC/rZOH/enabled'
+//  '<S72>'  : 'uav_adrc/Z Postion Active Disturbance Rejection Control/ADRC/yZOH/enabled'
 
 #endif                                 // uav_adrc_h_
 

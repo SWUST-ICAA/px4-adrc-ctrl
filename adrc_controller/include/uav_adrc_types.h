@@ -3,12 +3,12 @@
 //
 // Code generated for Simulink model 'uav_adrc'.
 //
-// Model version                  : 1.2
+// Model version                  : 1.4
 // Simulink Coder version         : 24.2 (R2024b) 21-Jun-2024
-// C/C++ source code generated on : Thu Jan 22 10:38:17 2026
+// C/C++ source code generated on : Thu Jan 22 20:28:50 2026
 //
 // Target selection: ert.tlc
-// Embedded hardware selection: Intel->x86-64 (Windows64)
+// Embedded hardware selection: Intel->x86-64 (Linux 64)
 // Code generation objectives: Unspecified
 // Validation result: Not run
 //
