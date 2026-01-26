@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.4
 // Simulink Coder version         : 24.2 (R2024b) 21-Jun-2024
-// C/C++ source code generated on : Thu Jan 22 20:28:50 2026
+// C/C++ source code generated on : Mon Jan 26 10:26:51 2026
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Intel->x86-64 (Linux 64)
@@ -23,6 +23,17 @@ const uav_adrc::ConstP_uav_adrc_T uav_adrc_ConstP{
   //    '<S69>/Gain2'
 
   { 1.0, 0.0, 0.0, 0.01, 1.0, 0.0, 5.0E-5, 0.01, 1.0 },
+
+  // Pooled Parameter (Expression: c)
+  //  Referenced by:
+  //    '<S14>/Gain'
+  //    '<S25>/Gain'
+  //    '<S36>/Gain'
+  //    '<S47>/Gain'
+  //    '<S58>/Gain'
+  //    '<S69>/Gain'
+
+  { 1.0, 0.0, 0.0 },
 
   // Pooled Parameter (Expression: bd)
   //  Referenced by:

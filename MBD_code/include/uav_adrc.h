@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.4
 // Simulink Coder version         : 24.2 (R2024b) 21-Jun-2024
-// C/C++ source code generated on : Thu Jan 22 20:28:50 2026
+// C/C++ source code generated on : Mon Jan 26 10:26:51 2026
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Intel->x86-64 (Linux 64)
@@ -42,6 +42,17 @@ class uav_adrc final
     //    '<S69>/Gain2'
 
     real_T pooled2[9];
+
+    // Pooled Parameter (Expression: c)
+    //  Referenced by:
+    //    '<S14>/Gain'
+    //    '<S25>/Gain'
+    //    '<S36>/Gain'
+    //    '<S47>/Gain'
+    //    '<S58>/Gain'
+    //    '<S69>/Gain'
+
+    real_T pooled3[3];
 
     // Pooled Parameter (Expression: bd)
     //  Referenced by:

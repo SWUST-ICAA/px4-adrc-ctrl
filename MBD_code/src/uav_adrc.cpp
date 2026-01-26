@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.4
 // Simulink Coder version         : 24.2 (R2024b) 21-Jun-2024
-// C/C++ source code generated on : Thu Jan 22 20:28:50 2026
+// C/C++ source code generated on : Mon Jan 26 10:26:51 2026
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Intel->x86-64 (Linux 64)
@@ -13,7 +13,6 @@
 // Validation result: Not run
 //
 #include "uav_adrc.h"
-#include <emmintrin.h>
 #include "rtwtypes.h"
 
 static void rate_scheduler(uav_adrc::RT_MODEL_uav_adrc_T *const uav_adrc_M);
@@ -38,11 +37,14 @@ static void rate_scheduler(uav_adrc::RT_MODEL_uav_adrc_T *const uav_adrc_M)
 // Model step function
 void uav_adrc::step()
 {
+  real_T rtb_Gain3[3];
   real_T rtb_Gain4[3];
+  real_T rtb_xk1_m[3];
   real_T tmp_0[3];
   real_T UnitDelay_DSTATE;
   real_T UnitDelay_DSTATE_0;
   real_T UnitDelay_DSTATE_1;
+  real_T UnitDelay_DSTATE_b;
   real_T rtb_Gain2_h;
   real_T rtb_Sum1;
   int32_T i;
@@ -85,28 +87,13 @@ void uav_adrc::step()
     //   Gain: '<S25>/Gain4'
     //   UnitDelay: '<S25>/Unit Delay'
 
-    for (i = 0; i <= 0; i += 2) {
-      _mm_storeu_pd(&tmp_0[i], _mm_add_pd(_mm_add_pd(_mm_add_pd(_mm_mul_pd
-        (_mm_loadu_pd(&uav_adrc_ConstP.pooled2[i + 3]), _mm_set1_pd
-         (UnitDelay_DSTATE)), _mm_mul_pd(_mm_loadu_pd(&uav_adrc_ConstP.pooled2[i]),
-        _mm_set1_pd(UnitDelay_DSTATE_0))), _mm_mul_pd(_mm_loadu_pd
-        (&uav_adrc_ConstP.pooled2[i + 6]), _mm_set1_pd(UnitDelay_DSTATE_1))),
-        _mm_add_pd(_mm_mul_pd(_mm_loadu_pd(&uav_adrc_ConstP.pooled6[i]),
-        _mm_set1_pd(rtb_Sum1)), _mm_mul_pd(_mm_loadu_pd
-        (&uav_adrc_ConstP.pooled7[i]), _mm_set1_pd(rtb_Gain2_h)))));
-    }
-
-    for (i = 2; i < 3; i++) {
-      tmp_0[i] = ((uav_adrc_ConstP.pooled2[i + 3] * UnitDelay_DSTATE +
-                   uav_adrc_ConstP.pooled2[i] * UnitDelay_DSTATE_0) +
-                  uav_adrc_ConstP.pooled2[i + 6] * UnitDelay_DSTATE_1) +
+    for (i = 0; i < 3; i++) {
+      rtb_Gain3[i] = ((uav_adrc_ConstP.pooled2[i + 3] * UnitDelay_DSTATE +
+                       uav_adrc_ConstP.pooled2[i] * UnitDelay_DSTATE_0) +
+                      uav_adrc_ConstP.pooled2[i + 6] * UnitDelay_DSTATE_1) +
         (uav_adrc_ConstP.pooled6[i] * rtb_Sum1 + uav_adrc_ConstP.pooled7[i] *
          rtb_Gain2_h);
     }
-
-    uav_adrc_DW.UnitDelay_DSTATE[0] = tmp_0[0];
-    uav_adrc_DW.UnitDelay_DSTATE[1] = tmp_0[1];
-    uav_adrc_DW.UnitDelay_DSTATE[2] = tmp_0[2];
 
     // End of Sum: '<S25>/Add1'
 
@@ -114,15 +101,14 @@ void uav_adrc::step()
     uav_adrc_Y.XAcceleration = rtb_Sum1;
   }
 
-  // Sum: '<S57>/Sum1' incorporates:
+  // Sum: '<S14>/Subtract' incorporates:
   //   Gain: '<S14>/Gain'
   //   Inport: '<Root>/X Attitude State'
-  //   Sum: '<S14>/Subtract'
   //   UnitDelay: '<S14>/Unit Delay'
 
-  uav_adrc_Y.ZTorque = uav_adrc_U.XAttitudeState - ((0.0 *
-    uav_adrc_DW.UnitDelay_DSTATE_a[1] + uav_adrc_DW.UnitDelay_DSTATE_a[0]) + 0.0
-    * uav_adrc_DW.UnitDelay_DSTATE_a[2]);
+  rtb_Sum1 = uav_adrc_U.XAttitudeState - ((0.0 * uav_adrc_DW.UnitDelay_DSTATE_a
+    [1] + uav_adrc_DW.UnitDelay_DSTATE_a[0]) + 0.0 *
+    uav_adrc_DW.UnitDelay_DSTATE_a[2]);
 
   // Sum: '<S13>/Sum1' incorporates:
   //   Gain: '<S13>/Gain'
@@ -134,18 +120,17 @@ void uav_adrc::step()
   //   Sum: '<S14>/Add'
   //   UnitDelay: '<S14>/Unit Delay'
 
-  rtb_Sum1 = ((uav_adrc_U.XAttitudeRef - (0.058235466415751391 *
-    uav_adrc_Y.ZTorque + uav_adrc_DW.UnitDelay_DSTATE_a[0])) * 4.0 -
-              (1.1646316877553027 * uav_adrc_Y.ZTorque +
-               uav_adrc_DW.UnitDelay_DSTATE_a[1]) * 4.0) - (7.763952455012177 *
-    uav_adrc_Y.ZTorque + uav_adrc_DW.UnitDelay_DSTATE_a[2]);
+  rtb_Gain2_h = ((uav_adrc_U.XAttitudeRef - (0.058235466415751391 * rtb_Sum1 +
+    uav_adrc_DW.UnitDelay_DSTATE_a[0])) * 4.0 - (1.1646316877553027 * rtb_Sum1 +
+    uav_adrc_DW.UnitDelay_DSTATE_a[1]) * 4.0) - (7.763952455012177 * rtb_Sum1 +
+    uav_adrc_DW.UnitDelay_DSTATE_a[2]);
 
   // UnitDelay: '<S14>/Unit Delay' incorporates:
   //   Gain: '<S14>/Gain2'
 
-  rtb_Gain2_h = uav_adrc_DW.UnitDelay_DSTATE_a[1];
-  UnitDelay_DSTATE = uav_adrc_DW.UnitDelay_DSTATE_a[0];
-  UnitDelay_DSTATE_0 = uav_adrc_DW.UnitDelay_DSTATE_a[2];
+  UnitDelay_DSTATE = uav_adrc_DW.UnitDelay_DSTATE_a[1];
+  UnitDelay_DSTATE_0 = uav_adrc_DW.UnitDelay_DSTATE_a[0];
+  UnitDelay_DSTATE_1 = uav_adrc_DW.UnitDelay_DSTATE_a[2];
 
   // Sum: '<S14>/Add1' incorporates:
   //   Gain: '<S14>/Gain2'
@@ -153,33 +138,23 @@ void uav_adrc::step()
   //   Gain: '<S14>/Gain4'
   //   UnitDelay: '<S14>/Unit Delay'
 
-  for (i = 0; i <= 0; i += 2) {
-    _mm_storeu_pd(&tmp_0[i], _mm_add_pd(_mm_add_pd(_mm_add_pd(_mm_mul_pd
-      (_mm_loadu_pd(&uav_adrc_ConstP.pooled8[i + 3]), _mm_set1_pd(rtb_Gain2_h)),
-      _mm_mul_pd(_mm_loadu_pd(&uav_adrc_ConstP.pooled8[i]), _mm_set1_pd
-                 (UnitDelay_DSTATE))), _mm_mul_pd(_mm_loadu_pd
-      (&uav_adrc_ConstP.pooled8[i + 6]), _mm_set1_pd(UnitDelay_DSTATE_0))),
-      _mm_add_pd(_mm_mul_pd(_mm_loadu_pd(&uav_adrc_ConstP.pooled11[i]),
-      _mm_set1_pd(rtb_Sum1)), _mm_mul_pd(_mm_loadu_pd
-      (&uav_adrc_ConstP.pooled12[i]), _mm_set1_pd(uav_adrc_Y.ZTorque)))));
+  for (i = 0; i < 3; i++) {
+    tmp_0[i] = ((uav_adrc_ConstP.pooled8[i + 3] * UnitDelay_DSTATE +
+                 uav_adrc_ConstP.pooled8[i] * UnitDelay_DSTATE_0) +
+                uav_adrc_ConstP.pooled8[i + 6] * UnitDelay_DSTATE_1) +
+      (uav_adrc_ConstP.pooled11[i] * rtb_Gain2_h + uav_adrc_ConstP.pooled12[i] *
+       rtb_Sum1);
   }
 
-  for (i = 2; i < 3; i++) {
-    tmp_0[i] = ((uav_adrc_ConstP.pooled8[i + 3] * rtb_Gain2_h +
-                 uav_adrc_ConstP.pooled8[i] * UnitDelay_DSTATE) +
-                uav_adrc_ConstP.pooled8[i + 6] * UnitDelay_DSTATE_0) +
-      (uav_adrc_ConstP.pooled11[i] * rtb_Sum1 + uav_adrc_ConstP.pooled12[i] *
-       uav_adrc_Y.ZTorque);
-  }
+  // Update for UnitDelay: '<S14>/Unit Delay' incorporates:
+  //   Sum: '<S14>/Add1'
 
   uav_adrc_DW.UnitDelay_DSTATE_a[0] = tmp_0[0];
   uav_adrc_DW.UnitDelay_DSTATE_a[1] = tmp_0[1];
   uav_adrc_DW.UnitDelay_DSTATE_a[2] = tmp_0[2];
 
-  // End of Sum: '<S14>/Add1'
-
   // Outport: '<Root>/X Torque'
-  uav_adrc_Y.XTorque = rtb_Sum1;
+  uav_adrc_Y.XTorque = rtb_Gain2_h;
   if (tmp) {
     // Sum: '<S47>/Subtract' incorporates:
     //   Gain: '<S47>/Gain'
@@ -204,56 +179,44 @@ void uav_adrc::step()
       uav_adrc_DW.UnitDelay_DSTATE_b[1]) * 2.0) - (8.61784444348992 *
       rtb_Gain2_h + uav_adrc_DW.UnitDelay_DSTATE_b[2]);
 
-    // UnitDelay: '<S47>/Unit Delay' incorporates:
-    //   Gain: '<S47>/Gain2'
-
-    UnitDelay_DSTATE = uav_adrc_DW.UnitDelay_DSTATE_b[1];
-    UnitDelay_DSTATE_0 = uav_adrc_DW.UnitDelay_DSTATE_b[0];
-    UnitDelay_DSTATE_1 = uav_adrc_DW.UnitDelay_DSTATE_b[2];
-
-    // Sum: '<S47>/Add1' incorporates:
-    //   Gain: '<S47>/Gain2'
-    //   Gain: '<S47>/Gain3'
-    //   Gain: '<S47>/Gain4'
-    //   UnitDelay: '<S47>/Unit Delay'
-
-    for (i = 0; i <= 0; i += 2) {
-      _mm_storeu_pd(&tmp_0[i], _mm_add_pd(_mm_add_pd(_mm_add_pd(_mm_mul_pd
-        (_mm_loadu_pd(&uav_adrc_ConstP.pooled2[i + 3]), _mm_set1_pd
-         (UnitDelay_DSTATE)), _mm_mul_pd(_mm_loadu_pd(&uav_adrc_ConstP.pooled2[i]),
-        _mm_set1_pd(UnitDelay_DSTATE_0))), _mm_mul_pd(_mm_loadu_pd
-        (&uav_adrc_ConstP.pooled2[i + 6]), _mm_set1_pd(UnitDelay_DSTATE_1))),
-        _mm_add_pd(_mm_mul_pd(_mm_loadu_pd(&uav_adrc_ConstP.pooled6[i]),
-        _mm_set1_pd(rtb_Sum1)), _mm_mul_pd(_mm_loadu_pd
-        (&uav_adrc_ConstP.pooled7[i]), _mm_set1_pd(rtb_Gain2_h)))));
-    }
-
-    for (i = 2; i < 3; i++) {
-      tmp_0[i] = ((uav_adrc_ConstP.pooled2[i + 3] * UnitDelay_DSTATE +
-                   uav_adrc_ConstP.pooled2[i] * UnitDelay_DSTATE_0) +
-                  uav_adrc_ConstP.pooled2[i + 6] * UnitDelay_DSTATE_1) +
-        (uav_adrc_ConstP.pooled6[i] * rtb_Sum1 + uav_adrc_ConstP.pooled7[i] *
-         rtb_Gain2_h);
-    }
-
     // Outport: '<Root>/Y Acceleration'
     uav_adrc_Y.YAcceleration = rtb_Sum1;
 
-    // Sum: '<S47>/Add1' incorporates:
-    //   UnitDelay: '<S47>/Unit Delay'
+    // Gain: '<S69>/Gain'
+    UnitDelay_DSTATE = 0.0;
 
-    uav_adrc_DW.UnitDelay_DSTATE_b[0] = tmp_0[0];
-    uav_adrc_DW.UnitDelay_DSTATE_b[1] = tmp_0[1];
-    uav_adrc_DW.UnitDelay_DSTATE_b[2] = tmp_0[2];
+    // UnitDelay: '<S47>/Unit Delay' incorporates:
+    //   Gain: '<S47>/Gain2'
+
+    UnitDelay_DSTATE_0 = uav_adrc_DW.UnitDelay_DSTATE_b[1];
+    UnitDelay_DSTATE_1 = uav_adrc_DW.UnitDelay_DSTATE_b[0];
+    UnitDelay_DSTATE_b = uav_adrc_DW.UnitDelay_DSTATE_b[2];
+    for (i = 0; i < 3; i++) {
+      // Sum: '<S47>/Add1' incorporates:
+      //   Gain: '<S47>/Gain2'
+      //   Gain: '<S47>/Gain3'
+      //   Gain: '<S47>/Gain4'
+      //   UnitDelay: '<S47>/Unit Delay'
+
+      rtb_xk1_m[i] = ((uav_adrc_ConstP.pooled2[i + 3] * UnitDelay_DSTATE_0 +
+                       uav_adrc_ConstP.pooled2[i] * UnitDelay_DSTATE_1) +
+                      uav_adrc_ConstP.pooled2[i + 6] * UnitDelay_DSTATE_b) +
+        (uav_adrc_ConstP.pooled6[i] * rtb_Sum1 + uav_adrc_ConstP.pooled7[i] *
+         rtb_Gain2_h);
+
+      // Gain: '<S69>/Gain' incorporates:
+      //   Gain: '<S47>/Gain2'
+      //   UnitDelay: '<S69>/Unit Delay'
+
+      UnitDelay_DSTATE += uav_adrc_ConstP.pooled3[i] *
+        uav_adrc_DW.UnitDelay_DSTATE_am[i];
+    }
 
     // Sum: '<S69>/Subtract' incorporates:
     //   Gain: '<S69>/Gain'
     //   Inport: '<Root>/Z Position State'
-    //   UnitDelay: '<S69>/Unit Delay'
 
-    rtb_Gain2_h = uav_adrc_U.ZPositionState - ((0.0 *
-      uav_adrc_DW.UnitDelay_DSTATE_am[1] + uav_adrc_DW.UnitDelay_DSTATE_am[0]) +
-      0.0 * uav_adrc_DW.UnitDelay_DSTATE_am[2]);
+    rtb_Gain2_h = uav_adrc_U.ZPositionState - UnitDelay_DSTATE;
 
     // Sum: '<S68>/Sum1' incorporates:
     //   Gain: '<S68>/Gain2'
@@ -282,18 +245,7 @@ void uav_adrc::step()
     //   Gain: '<S69>/Gain4'
     //   UnitDelay: '<S69>/Unit Delay'
 
-    for (i = 0; i <= 0; i += 2) {
-      _mm_storeu_pd(&rtb_Gain4[i], _mm_add_pd(_mm_add_pd(_mm_add_pd(_mm_mul_pd
-        (_mm_loadu_pd(&uav_adrc_ConstP.pooled2[i + 3]), _mm_set1_pd
-         (UnitDelay_DSTATE)), _mm_mul_pd(_mm_loadu_pd(&uav_adrc_ConstP.pooled2[i]),
-        _mm_set1_pd(UnitDelay_DSTATE_0))), _mm_mul_pd(_mm_loadu_pd
-        (&uav_adrc_ConstP.pooled2[i + 6]), _mm_set1_pd(UnitDelay_DSTATE_1))),
-        _mm_add_pd(_mm_mul_pd(_mm_loadu_pd(&uav_adrc_ConstP.pooled6[i]),
-        _mm_set1_pd(rtb_Sum1)), _mm_mul_pd(_mm_loadu_pd
-        (&uav_adrc_ConstP.pooled7[i]), _mm_set1_pd(rtb_Gain2_h)))));
-    }
-
-    for (i = 2; i < 3; i++) {
+    for (i = 0; i < 3; i++) {
       rtb_Gain4[i] = ((uav_adrc_ConstP.pooled2[i + 3] * UnitDelay_DSTATE +
                        uav_adrc_ConstP.pooled2[i] * UnitDelay_DSTATE_0) +
                       uav_adrc_ConstP.pooled2[i + 6] * UnitDelay_DSTATE_1) +
@@ -312,32 +264,31 @@ void uav_adrc::step()
   //   Inport: '<Root>/Y Attitude State'
   //   UnitDelay: '<S36>/Unit Delay'
 
-  rtb_Sum1 = uav_adrc_U.YAttitudeState - ((0.0 * uav_adrc_DW.UnitDelay_DSTATE_f
-    [1] + uav_adrc_DW.UnitDelay_DSTATE_f[0]) + 0.0 *
-    uav_adrc_DW.UnitDelay_DSTATE_f[2]);
+  rtb_Gain2_h = uav_adrc_U.YAttitudeState - ((0.0 *
+    uav_adrc_DW.UnitDelay_DSTATE_f[1] + uav_adrc_DW.UnitDelay_DSTATE_f[0]) + 0.0
+    * uav_adrc_DW.UnitDelay_DSTATE_f[2]);
 
-  // Sum: '<S57>/Sum1' incorporates:
+  // Sum: '<S35>/Sum1' incorporates:
   //   Gain: '<S35>/Gain'
   //   Gain: '<S35>/Gain2'
   //   Gain: '<S36>/Gain1'
   //   Inport: '<Root>/Y Attitude Ref'
   //   Sum: '<S35>/Sum'
-  //   Sum: '<S35>/Sum1'
   //   Sum: '<S35>/Sum2'
   //   Sum: '<S36>/Add'
   //   UnitDelay: '<S36>/Unit Delay'
 
-  uav_adrc_Y.ZTorque = ((uav_adrc_U.YAttitudeRef - (0.058235466415751391 *
-    rtb_Sum1 + uav_adrc_DW.UnitDelay_DSTATE_f[0])) * 4.0 - (1.1646316877553027 *
-    rtb_Sum1 + uav_adrc_DW.UnitDelay_DSTATE_f[1]) * 4.0) - (7.763952455012177 *
-    rtb_Sum1 + uav_adrc_DW.UnitDelay_DSTATE_f[2]);
+  rtb_Sum1 = ((uav_adrc_U.YAttitudeRef - (0.058235466415751391 * rtb_Gain2_h +
+    uav_adrc_DW.UnitDelay_DSTATE_f[0])) * 4.0 - (1.1646316877553027 *
+    rtb_Gain2_h + uav_adrc_DW.UnitDelay_DSTATE_f[1]) * 4.0) - (7.763952455012177
+    * rtb_Gain2_h + uav_adrc_DW.UnitDelay_DSTATE_f[2]);
 
   // UnitDelay: '<S36>/Unit Delay' incorporates:
   //   Gain: '<S36>/Gain2'
 
-  rtb_Gain2_h = uav_adrc_DW.UnitDelay_DSTATE_f[1];
-  UnitDelay_DSTATE = uav_adrc_DW.UnitDelay_DSTATE_f[0];
-  UnitDelay_DSTATE_0 = uav_adrc_DW.UnitDelay_DSTATE_f[2];
+  UnitDelay_DSTATE = uav_adrc_DW.UnitDelay_DSTATE_f[1];
+  UnitDelay_DSTATE_0 = uav_adrc_DW.UnitDelay_DSTATE_f[0];
+  UnitDelay_DSTATE_1 = uav_adrc_DW.UnitDelay_DSTATE_f[2];
 
   // Sum: '<S36>/Add1' incorporates:
   //   Gain: '<S36>/Gain2'
@@ -345,30 +296,19 @@ void uav_adrc::step()
   //   Gain: '<S36>/Gain4'
   //   UnitDelay: '<S36>/Unit Delay'
 
-  for (i = 0; i <= 0; i += 2) {
-    _mm_storeu_pd(&tmp_0[i], _mm_add_pd(_mm_add_pd(_mm_add_pd(_mm_mul_pd
-      (_mm_loadu_pd(&uav_adrc_ConstP.pooled8[i + 3]), _mm_set1_pd(rtb_Gain2_h)),
-      _mm_mul_pd(_mm_loadu_pd(&uav_adrc_ConstP.pooled8[i]), _mm_set1_pd
-                 (UnitDelay_DSTATE))), _mm_mul_pd(_mm_loadu_pd
-      (&uav_adrc_ConstP.pooled8[i + 6]), _mm_set1_pd(UnitDelay_DSTATE_0))),
-      _mm_add_pd(_mm_mul_pd(_mm_loadu_pd(&uav_adrc_ConstP.pooled11[i]),
-      _mm_set1_pd(uav_adrc_Y.ZTorque)), _mm_mul_pd(_mm_loadu_pd
-      (&uav_adrc_ConstP.pooled12[i]), _mm_set1_pd(rtb_Sum1)))));
-  }
-
-  for (i = 2; i < 3; i++) {
-    tmp_0[i] = ((uav_adrc_ConstP.pooled8[i + 3] * rtb_Gain2_h +
-                 uav_adrc_ConstP.pooled8[i] * UnitDelay_DSTATE) +
-                uav_adrc_ConstP.pooled8[i + 6] * UnitDelay_DSTATE_0) +
-      (uav_adrc_ConstP.pooled11[i] * uav_adrc_Y.ZTorque +
-       uav_adrc_ConstP.pooled12[i] * rtb_Sum1);
+  for (i = 0; i < 3; i++) {
+    tmp_0[i] = ((uav_adrc_ConstP.pooled8[i + 3] * UnitDelay_DSTATE +
+                 uav_adrc_ConstP.pooled8[i] * UnitDelay_DSTATE_0) +
+                uav_adrc_ConstP.pooled8[i + 6] * UnitDelay_DSTATE_1) +
+      (uav_adrc_ConstP.pooled11[i] * rtb_Sum1 + uav_adrc_ConstP.pooled12[i] *
+       rtb_Gain2_h);
   }
 
   // Outport: '<Root>/Y Torque'
-  uav_adrc_Y.YTorque = uav_adrc_Y.ZTorque;
+  uav_adrc_Y.YTorque = rtb_Sum1;
 
-  // Sum: '<S36>/Add1' incorporates:
-  //   UnitDelay: '<S36>/Unit Delay'
+  // Update for UnitDelay: '<S36>/Unit Delay' incorporates:
+  //   Sum: '<S36>/Add1'
 
   uav_adrc_DW.UnitDelay_DSTATE_f[0] = tmp_0[0];
   uav_adrc_DW.UnitDelay_DSTATE_f[1] = tmp_0[1];
@@ -379,9 +319,9 @@ void uav_adrc::step()
   //   Inport: '<Root>/Z Attitude State'
   //   UnitDelay: '<S58>/Unit Delay'
 
-  rtb_Sum1 = uav_adrc_U.ZAttitudeState - ((0.0 * uav_adrc_DW.UnitDelay_DSTATE_h
-    [1] + uav_adrc_DW.UnitDelay_DSTATE_h[0]) + 0.0 *
-    uav_adrc_DW.UnitDelay_DSTATE_h[2]);
+  rtb_Gain2_h = uav_adrc_U.ZAttitudeState - ((0.0 *
+    uav_adrc_DW.UnitDelay_DSTATE_h[1] + uav_adrc_DW.UnitDelay_DSTATE_h[0]) + 0.0
+    * uav_adrc_DW.UnitDelay_DSTATE_h[2]);
 
   // Sum: '<S57>/Sum1' incorporates:
   //   Gain: '<S57>/Gain'
@@ -393,23 +333,44 @@ void uav_adrc::step()
   //   Sum: '<S58>/Add'
   //   UnitDelay: '<S58>/Unit Delay'
 
-  uav_adrc_Y.ZTorque = ((uav_adrc_U.ZAttitudeRef - (0.058235466415751391 *
-    rtb_Sum1 + uav_adrc_DW.UnitDelay_DSTATE_h[0])) * 4.0 - (1.1646316877553027 *
-    rtb_Sum1 + uav_adrc_DW.UnitDelay_DSTATE_h[1]) * 4.0) - (7.763952455012177 *
-    rtb_Sum1 + uav_adrc_DW.UnitDelay_DSTATE_h[2]);
+  rtb_Sum1 = ((uav_adrc_U.ZAttitudeRef - (0.058235466415751391 * rtb_Gain2_h +
+    uav_adrc_DW.UnitDelay_DSTATE_h[0])) * 4.0 - (1.1646316877553027 *
+    rtb_Gain2_h + uav_adrc_DW.UnitDelay_DSTATE_h[1]) * 4.0) - (7.763952455012177
+    * rtb_Gain2_h + uav_adrc_DW.UnitDelay_DSTATE_h[2]);
+
+  // Outport: '<Root>/Z Torque'
+  uav_adrc_Y.ZTorque = rtb_Sum1;
   if (tmp) {
+    // Update for UnitDelay: '<S25>/Unit Delay'
+    uav_adrc_DW.UnitDelay_DSTATE[0] = rtb_Gain3[0];
+    uav_adrc_DW.UnitDelay_DSTATE[1] = rtb_Gain3[1];
+    uav_adrc_DW.UnitDelay_DSTATE[2] = rtb_Gain3[2];
+
+    // Update for UnitDelay: '<S47>/Unit Delay'
+    uav_adrc_DW.UnitDelay_DSTATE_b[0] = rtb_xk1_m[0];
+
     // Update for UnitDelay: '<S69>/Unit Delay'
     uav_adrc_DW.UnitDelay_DSTATE_am[0] = rtb_Gain4[0];
+
+    // Update for UnitDelay: '<S47>/Unit Delay'
+    uav_adrc_DW.UnitDelay_DSTATE_b[1] = rtb_xk1_m[1];
+
+    // Update for UnitDelay: '<S69>/Unit Delay'
     uav_adrc_DW.UnitDelay_DSTATE_am[1] = rtb_Gain4[1];
+
+    // Update for UnitDelay: '<S47>/Unit Delay'
+    uav_adrc_DW.UnitDelay_DSTATE_b[2] = rtb_xk1_m[2];
+
+    // Update for UnitDelay: '<S69>/Unit Delay'
     uav_adrc_DW.UnitDelay_DSTATE_am[2] = rtb_Gain4[2];
   }
 
   // UnitDelay: '<S58>/Unit Delay' incorporates:
   //   Gain: '<S58>/Gain2'
 
-  rtb_Gain2_h = uav_adrc_DW.UnitDelay_DSTATE_h[1];
-  UnitDelay_DSTATE = uav_adrc_DW.UnitDelay_DSTATE_h[0];
-  UnitDelay_DSTATE_0 = uav_adrc_DW.UnitDelay_DSTATE_h[2];
+  UnitDelay_DSTATE = uav_adrc_DW.UnitDelay_DSTATE_h[1];
+  UnitDelay_DSTATE_0 = uav_adrc_DW.UnitDelay_DSTATE_h[0];
+  UnitDelay_DSTATE_1 = uav_adrc_DW.UnitDelay_DSTATE_h[2];
 
   // Sum: '<S58>/Add1' incorporates:
   //   Gain: '<S58>/Gain2'
@@ -417,23 +378,12 @@ void uav_adrc::step()
   //   Gain: '<S58>/Gain4'
   //   UnitDelay: '<S58>/Unit Delay'
 
-  for (i = 0; i <= 0; i += 2) {
-    _mm_storeu_pd(&tmp_0[i], _mm_add_pd(_mm_add_pd(_mm_add_pd(_mm_mul_pd
-      (_mm_loadu_pd(&uav_adrc_ConstP.pooled8[i + 3]), _mm_set1_pd(rtb_Gain2_h)),
-      _mm_mul_pd(_mm_loadu_pd(&uav_adrc_ConstP.pooled8[i]), _mm_set1_pd
-                 (UnitDelay_DSTATE))), _mm_mul_pd(_mm_loadu_pd
-      (&uav_adrc_ConstP.pooled8[i + 6]), _mm_set1_pd(UnitDelay_DSTATE_0))),
-      _mm_add_pd(_mm_mul_pd(_mm_loadu_pd(&uav_adrc_ConstP.pooled11[i]),
-      _mm_set1_pd(uav_adrc_Y.ZTorque)), _mm_mul_pd(_mm_loadu_pd
-      (&uav_adrc_ConstP.pooled12[i]), _mm_set1_pd(rtb_Sum1)))));
-  }
-
-  for (i = 2; i < 3; i++) {
-    tmp_0[i] = ((uav_adrc_ConstP.pooled8[i + 3] * rtb_Gain2_h +
-                 uav_adrc_ConstP.pooled8[i] * UnitDelay_DSTATE) +
-                uav_adrc_ConstP.pooled8[i + 6] * UnitDelay_DSTATE_0) +
-      (uav_adrc_ConstP.pooled11[i] * uav_adrc_Y.ZTorque +
-       uav_adrc_ConstP.pooled12[i] * rtb_Sum1);
+  for (i = 0; i < 3; i++) {
+    tmp_0[i] = ((uav_adrc_ConstP.pooled8[i + 3] * UnitDelay_DSTATE +
+                 uav_adrc_ConstP.pooled8[i] * UnitDelay_DSTATE_0) +
+                uav_adrc_ConstP.pooled8[i + 6] * UnitDelay_DSTATE_1) +
+      (uav_adrc_ConstP.pooled11[i] * rtb_Sum1 + uav_adrc_ConstP.pooled12[i] *
+       rtb_Gain2_h);
   }
 
   // End of Sum: '<S58>/Add1'
