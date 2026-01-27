@@ -207,6 +207,8 @@ AdrcControllerNode::AdrcControllerNode() : rclcpp::Node("px4_adrc_controller")
   thrust_sp_topic_ =
     declare_parameter<std::string>("topics.vehicle_thrust_setpoint", "/fmu/in/vehicle_thrust_setpoint");
   vehicle_command_topic_ = declare_parameter<std::string>("topics.vehicle_command", "/fmu/in/vehicle_command");
+  trajectory_trigger_topic_ =
+    declare_parameter<std::string>("topics.trajectory_start_trigger", "/adrc/trajectory_start");
 
   // Timing / behavior
   rate_hz_ = declare_parameter<double>("control.rate_hz", 1000.0);
@@ -224,6 +226,13 @@ AdrcControllerNode::AdrcControllerNode() : rclcpp::Node("px4_adrc_controller")
   target_component_ = declare_parameter<int>("offboard.target_component", 1);
   source_system_ = declare_parameter<int>("offboard.source_system", 1);
   source_component_ = declare_parameter<int>("offboard.source_component", 1);
+
+  // Takeoff / trigger
+  takeoff_height_m_ = declare_parameter<double>("takeoff.height_m", 1.0);
+  takeoff_reached_tol_m_ = declare_parameter<double>("takeoff.reached_tol_m", 0.1);
+  takeoff_yaw_rad_ = declare_parameter<double>("takeoff.yaw_rad", 0.0);
+  trigger_pulse_ms_ = declare_parameter<int>("trigger.pulse_ms", 500);
+  trigger_period_ms_ = declare_parameter<int>("trigger.period_ms", 100);
 
   // Vehicle / allocation
   mass_kg_ = declare_parameter<double>("vehicle.mass_kg", 1.5);
@@ -279,6 +288,7 @@ AdrcControllerNode::AdrcControllerNode() : rclcpp::Node("px4_adrc_controller")
   motors_pub_ = create_publisher<px4_msgs::msg::ActuatorMotors>(actuator_motors_topic_, 10);
   thrust_sp_pub_ = create_publisher<px4_msgs::msg::VehicleThrustSetpoint>(thrust_sp_topic_, 10);
   vehicle_command_pub_ = create_publisher<px4_msgs::msg::VehicleCommand>(vehicle_command_topic_, 10);
+  trajectory_trigger_pub_ = create_publisher<std_msgs::msg::Bool>(trajectory_trigger_topic_, 10);
 
   // Control loop
   const auto period_ns = std::chrono::nanoseconds(static_cast<int64_t>(1e9 / std::max(1.0, rate_hz_)));
@@ -329,12 +339,37 @@ void AdrcControllerNode::on_timer()
 
   const bool armed = status_ok && (status.arming_state == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED);
   const bool offboard = status_ok && (status.nav_state == px4_msgs::msg::VehicleStatus::NAVIGATION_STATE_OFFBOARD);
-  const bool inputs_ok = odom_ok && sp_ok;
+  const bool inputs_ok_for_offboard = odom_ok;  // before trajectory, only odom is required
 
-  maybe_request_offboard(now, armed, offboard, inputs_ok);
+  // Mission phase transitions.
+  if (!armed) {
+    phase_ = MissionPhase::kWaitArmed;
+    takeoff_origin_valid_ = false;
+    trigger_start_time_.reset();
+    last_trigger_pub_time_.reset();
+  }
+  if (phase_ == MissionPhase::kWaitArmed && armed) {
+    phase_ = MissionPhase::kWaitOffboard;
+  }
+  if (phase_ == MissionPhase::kWaitOffboard && armed && offboard) {
+    phase_ = MissionPhase::kTakeoff;
+    takeoff_origin_valid_ = false;
+  }
+  if ((phase_ == MissionPhase::kTakeoff || phase_ == MissionPhase::kTriggerTrajectory ||
+       phase_ == MissionPhase::kWaitTrajectory || phase_ == MissionPhase::kTrack) &&
+      armed && !offboard) {
+    // If OFFBOARD is lost, go back to waiting for OFFBOARD.
+    phase_ = MissionPhase::kWaitOffboard;
+    takeoff_origin_valid_ = false;
+    trigger_start_time_.reset();
+    last_trigger_pub_time_.reset();
+  }
 
-  // Publish idle values until ARMED+OFFBOARD and inputs are valid.
-  if (!(armed && offboard && inputs_ok)) {
+  // Automatic OFFBOARD switch once armed and odom is valid.
+  maybe_request_offboard(now, armed, offboard, inputs_ok_for_offboard);
+
+  // Before OFFBOARD, only publish idle/nan (do not try to control).
+  if (!armed || !offboard || !odom_ok) {
     if (publish_idle_before_offboard_) {
       publish_idle_outputs(now);
     } else {
@@ -351,11 +386,63 @@ void AdrcControllerNode::on_timer()
     return;
   }
 
+  // Generate effective reference setpoint depending on mission phase.
+  px4_msgs::msg::TrajectorySetpoint eff_sp{};
+  if (phase_ == MissionPhase::kTrack) {
+    // Require external trajectory during tracking; if missing, fall back to hover at current.
+    eff_sp = traj;
+    if (!sp_ok) {
+      eff_sp.position[0] = odom.position[0];
+      eff_sp.position[1] = odom.position[1];
+      eff_sp.position[2] = odom.position[2];
+      eff_sp.yaw = static_cast<float>(takeoff_yaw_rad_);
+    }
+  } else {
+    // Hold XY at takeoff origin, and command climb to target altitude.
+    if (!takeoff_origin_valid_) {
+      takeoff_origin_ned_[0] = static_cast<double>(odom.position[0]);
+      takeoff_origin_ned_[1] = static_cast<double>(odom.position[1]);
+      takeoff_origin_ned_[2] = static_cast<double>(odom.position[2]);
+      takeoff_origin_valid_ = true;
+    }
+    eff_sp.position[0] = static_cast<float>(takeoff_origin_ned_[0]);
+    eff_sp.position[1] = static_cast<float>(takeoff_origin_ned_[1]);
+    eff_sp.position[2] = static_cast<float>(takeoff_origin_ned_[2] - takeoff_height_m_);
+    eff_sp.yaw = static_cast<float>(takeoff_yaw_rad_);
+  }
+
+  // Takeoff completion check and trigger publishing.
+  if (phase_ == MissionPhase::kTakeoff) {
+    const double z0 = takeoff_origin_ned_[2];
+    const double z = static_cast<double>(odom.position[2]);
+    const double altitude_up_m = z0 - z;  // NED: z down, so up is -z
+    if (altitude_up_m >= (takeoff_height_m_ - takeoff_reached_tol_m_)) {
+      phase_ = MissionPhase::kTriggerTrajectory;
+      trigger_start_time_ = now;
+      last_trigger_pub_time_.reset();
+    }
+  }
+  if (phase_ == MissionPhase::kTriggerTrajectory) {
+    publish_trajectory_trigger(now);
+    if (trigger_start_time_) {
+      const int64_t elapsed_ms = (now - *trigger_start_time_).nanoseconds() / 1000000LL;
+      if (elapsed_ms >= trigger_pulse_ms_) {
+        phase_ = MissionPhase::kWaitTrajectory;
+      }
+    }
+  }
+  if (phase_ == MissionPhase::kWaitTrajectory) {
+    // Keep hovering until we receive fresh trajectory data, then start tracking.
+    if (sp_ok && trigger_start_time_ && (traj_rx_time > *trigger_start_time_)) {
+      phase_ = MissionPhase::kTrack;
+    }
+  }
+
   // Position ref/state (TrajectorySetpoint is NED). If ref is NaN, hold current.
   const Eigen::Vector3d p_ref_ned(
-    is_finite(traj.position[0]) ? static_cast<double>(traj.position[0]) : static_cast<double>(odom.position[0]),
-    is_finite(traj.position[1]) ? static_cast<double>(traj.position[1]) : static_cast<double>(odom.position[1]),
-    is_finite(traj.position[2]) ? static_cast<double>(traj.position[2]) : static_cast<double>(odom.position[2]));
+    is_finite(eff_sp.position[0]) ? static_cast<double>(eff_sp.position[0]) : static_cast<double>(odom.position[0]),
+    is_finite(eff_sp.position[1]) ? static_cast<double>(eff_sp.position[1]) : static_cast<double>(odom.position[1]),
+    is_finite(eff_sp.position[2]) ? static_cast<double>(eff_sp.position[2]) : static_cast<double>(odom.position[2]));
   const Eigen::Vector3d p_ned(static_cast<double>(odom.position[0]), static_cast<double>(odom.position[1]),
                               static_cast<double>(odom.position[2]));
 
@@ -377,7 +464,7 @@ void AdrcControllerNode::on_timer()
   const Eigen::Vector3d a_cmd_ned(out_pos.XAcceleration, out_pos.YAcceleration, out_pos.ZAcceleration);
 
   // 2) Desired attitude from thrust vector (accel command + yaw).
-  const double yaw_des = is_finite(traj.yaw) ? static_cast<double>(traj.yaw) : 0.0;
+  const double yaw_des = is_finite(eff_sp.yaw) ? static_cast<double>(eff_sp.yaw) : 0.0;
   const Eigen::Vector3d g_ned(0.0, 0.0, gravity_mps2_);
   const Eigen::Vector3d f_des_ned = mass_kg_ * (a_cmd_ned - g_ned);
   const double T_N = f_des_ned.norm();
@@ -548,6 +635,28 @@ void AdrcControllerNode::publish_nan_outputs(const rclcpp::Time &now)
     motors_msg.control[i] = nan;
   }
   motors_pub_->publish(motors_msg);
+}
+
+/**
+ * @brief Publish a one-shot (pulsed) trajectory start trigger.
+ * @param now Current time.
+ */
+void AdrcControllerNode::publish_trajectory_trigger(const rclcpp::Time &now)
+{
+  if (trigger_period_ms_ <= 0) {
+    return;
+  }
+  if (last_trigger_pub_time_) {
+    const int64_t since_last_ms = (now - *last_trigger_pub_time_).nanoseconds() / 1000000LL;
+    if (since_last_ms < trigger_period_ms_) {
+      return;
+    }
+  }
+
+  std_msgs::msg::Bool msg{};
+  msg.data = true;
+  trajectory_trigger_pub_->publish(msg);
+  last_trigger_pub_time_ = now;
 }
 
 }  // namespace px4_adrc_ctrl

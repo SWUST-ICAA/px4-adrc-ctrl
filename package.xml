@@ -13,6 +13,7 @@
 
   <depend>rclcpp</depend>
   <depend>px4_msgs</depend>
+  <depend>std_msgs</depend>
 
   <build_depend>eigen</build_depend>
   <build_export_depend>eigen</build_export_depend>

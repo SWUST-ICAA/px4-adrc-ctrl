@@ -10,6 +10,7 @@ find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(px4_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 
 add_library(uav_adrc_mbd STATIC
   MBD_code/src/uav_adrc.cpp
@@ -28,7 +29,7 @@ target_include_directories(adrc_controller_node PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 target_link_libraries(adrc_controller_node uav_adrc_mbd Eigen3::Eigen)
-ament_target_dependencies(adrc_controller_node rclcpp px4_msgs)
+ament_target_dependencies(adrc_controller_node rclcpp px4_msgs std_msgs)
 
 install(TARGETS
   uav_adrc_mbd

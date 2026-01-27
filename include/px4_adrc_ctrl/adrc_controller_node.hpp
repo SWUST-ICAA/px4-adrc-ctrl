@@ -17,6 +17,7 @@
 #include "px4_msgs/msg/vehicle_odometry.hpp"
 #include "px4_msgs/msg/vehicle_status.hpp"
 #include "px4_msgs/msg/vehicle_thrust_setpoint.hpp"
+#include "std_msgs/msg/bool.hpp"
 
 #include "uav_adrc.h"
 
@@ -32,12 +33,23 @@ public:
   ~AdrcControllerNode() override;
 
 private:
+  enum class MissionPhase
+  {
+    kWaitArmed,
+    kWaitOffboard,
+    kTakeoff,
+    kTriggerTrajectory,
+    kWaitTrajectory,
+    kTrack
+  };
+
   void on_timer();
   void maybe_request_offboard(const rclcpp::Time &now, bool armed, bool offboard, bool inputs_ok);
 
   void publish_offboard_mode(const rclcpp::Time &now);
   void publish_idle_outputs(const rclcpp::Time &now);
   void publish_nan_outputs(const rclcpp::Time &now);
+  void publish_trajectory_trigger(const rclcpp::Time &now);
 
   // Parameters
   std::string odom_topic_;
@@ -47,6 +59,7 @@ private:
   std::string actuator_motors_topic_;
   std::string thrust_sp_topic_;
   std::string vehicle_command_topic_;
+  std::string trajectory_trigger_topic_;
 
   double rate_hz_{};
   int odom_timeout_ms_{};
@@ -62,6 +75,12 @@ private:
   int target_component_{};
   int source_system_{};
   int source_component_{};
+
+  double takeoff_height_m_{};
+  double takeoff_reached_tol_m_{};
+  double takeoff_yaw_rad_{};
+  int trigger_pulse_ms_{};
+  int trigger_period_ms_{};
 
   double mass_kg_{};
   double gravity_mps2_{};
@@ -83,6 +102,7 @@ private:
   rclcpp::Publisher<px4_msgs::msg::ActuatorMotors>::SharedPtr motors_pub_;
   rclcpp::Publisher<px4_msgs::msg::VehicleThrustSetpoint>::SharedPtr thrust_sp_pub_;
   rclcpp::Publisher<px4_msgs::msg::VehicleCommand>::SharedPtr vehicle_command_pub_;
+  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr trajectory_trigger_pub_;
 
   rclcpp::TimerBase::SharedPtr timer_;
 
@@ -101,6 +121,13 @@ private:
   // Offboard request state
   std::optional<rclcpp::Time> offboard_warmup_start_time_{};
   std::optional<rclcpp::Time> last_offboard_cmd_time_{};
+
+  // Mission state
+  MissionPhase phase_{MissionPhase::kWaitArmed};
+  bool takeoff_origin_valid_{false};
+  std::array<double, 3> takeoff_origin_ned_{};
+  std::optional<rclcpp::Time> trigger_start_time_{};
+  std::optional<rclcpp::Time> last_trigger_pub_time_{};
 };
 
 }  // namespace px4_adrc_ctrl
