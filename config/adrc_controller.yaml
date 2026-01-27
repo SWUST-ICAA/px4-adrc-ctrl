@@ -16,9 +16,6 @@ px4_adrc_controller:
       odom_timeout_ms: 200
       setpoint_timeout_ms: 200
       status_timeout_ms: 500
-      # Publish zero-throttle actuator setpoints before OFFBOARD to allow manual mode switch.
-      publish_idle_before_offboard: true
-      idle_motor_throttle: 0.0
 
     vehicle:
       mass_kg: 2.06
@@ -28,8 +25,6 @@ px4_adrc_controller:
       # Yaw torque per unit thrust (tune for your prop/airframe).
       yaw_moment_coeff_Nm_per_N: 0.01
       max_motor_thrust_N: 8.54858
-      # Motor yaw signs for [M1 FR, M2 BL, M3 FL, M4 BR].
-      motor_yaw_signs: [1, 1, -1, -1]
 
     takeoff:
       # Take off to this height above the arming position (meters, positive up).

@@ -215,8 +215,6 @@ AdrcControllerNode::AdrcControllerNode() : rclcpp::Node("px4_adrc_controller")
   odom_timeout_ms_ = declare_parameter<int>("control.odom_timeout_ms", 200);
   setpoint_timeout_ms_ = declare_parameter<int>("control.setpoint_timeout_ms", 200);
   status_timeout_ms_ = declare_parameter<int>("control.status_timeout_ms", 500);
-  publish_idle_before_offboard_ = declare_parameter<bool>("control.publish_idle_before_offboard", true);
-  idle_motor_throttle_ = declare_parameter<double>("control.idle_motor_throttle", 0.0);
 
   // Automatic Offboard switch (arming is manual).
   auto_offboard_enabled_ = declare_parameter<bool>("offboard.auto_switch", true);
@@ -241,15 +239,10 @@ AdrcControllerNode::AdrcControllerNode() : rclcpp::Node("px4_adrc_controller")
   yaw_moment_coeff_Nm_per_N_ = declare_parameter<double>("vehicle.yaw_moment_coeff_Nm_per_N", 0.01);
   max_motor_thrust_N_ = declare_parameter<double>("vehicle.max_motor_thrust_N", 6.0);
 
-  const auto yaw_signs_param = declare_parameter<std::vector<int64_t>>(
-    "vehicle.motor_yaw_signs", std::vector<int64_t>{+1, +1, -1, -1});
-  if (yaw_signs_param.size() != 4) {
-    throw std::runtime_error("vehicle.motor_yaw_signs must have 4 elements");
-  }
-  yaw_signs_ = {static_cast<double>(yaw_signs_param[0]), static_cast<double>(yaw_signs_param[1]),
-                static_cast<double>(yaw_signs_param[2]), static_cast<double>(yaw_signs_param[3])};
-
-  alloc_ = std::make_unique<MotorAllocation>(arm_length_m_, yaw_moment_coeff_Nm_per_N_, yaw_signs_);
+  // PX4 standard Quadrotor X: M1/M2 CCW, M3/M4 CW (viewed from above).
+  // With PX4 NED/FRD conventions, positive yaw torque corresponds to CCW motors increasing thrust.
+  const std::array<double, 4> yaw_signs_px4 = {+1.0, +1.0, -1.0, -1.0};
+  alloc_ = std::make_unique<MotorAllocation>(arm_length_m_, yaw_moment_coeff_Nm_per_N_, yaw_signs_px4);
 
   // Two independent MBD instances: position (accel) and attitude (torque).
   adrc_pos_ = std::make_unique<uav_adrc>();
@@ -370,7 +363,10 @@ void AdrcControllerNode::on_timer()
 
   // Before OFFBOARD, only publish idle/nan (do not try to control).
   if (!armed || !offboard || !odom_ok) {
-    if (publish_idle_before_offboard_) {
+    // Automatic safe behavior:
+    // - Disarmed: publish NaN (stop/disarmed).
+    // - Armed but not in OFFBOARD yet: publish zero motor setpoints (keeps streaming inputs for OFFBOARD).
+    if (armed) {
       publish_idle_outputs(now);
     } else {
       publish_nan_outputs(now);
@@ -607,7 +603,7 @@ void AdrcControllerNode::publish_idle_outputs(const rclcpp::Time &now)
     motors_msg.control[i] = nan;
   }
   for (int i = 0; i < 4; i++) {
-    motors_msg.control[i] = static_cast<float>(std::clamp(idle_motor_throttle_, 0.0, 1.0));
+    motors_msg.control[i] = 0.0f;
   }
   motors_pub_->publish(motors_msg);
 
@@ -635,6 +631,15 @@ void AdrcControllerNode::publish_nan_outputs(const rclcpp::Time &now)
     motors_msg.control[i] = nan;
   }
   motors_pub_->publish(motors_msg);
+
+  // Keep publishing thrust setpoint in direct_actuator setups to avoid land detector edge cases.
+  px4_msgs::msg::VehicleThrustSetpoint thrust_msg{};
+  thrust_msg.timestamp = motors_msg.timestamp;
+  thrust_msg.timestamp_sample = motors_msg.timestamp_sample;
+  thrust_msg.xyz[0] = 0.0f;
+  thrust_msg.xyz[1] = 0.0f;
+  thrust_msg.xyz[2] = 0.0f;
+  thrust_sp_pub_->publish(thrust_msg);
 }
 
 /**

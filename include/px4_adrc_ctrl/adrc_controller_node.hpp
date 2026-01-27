@@ -65,8 +65,6 @@ private:
   int odom_timeout_ms_{};
   int setpoint_timeout_ms_{};
   int status_timeout_ms_{};
-  bool publish_idle_before_offboard_{};
-  double idle_motor_throttle_{};
 
   bool auto_offboard_enabled_{};
   int offboard_warmup_ms_{};
@@ -87,7 +85,6 @@ private:
   double arm_length_m_{};
   double yaw_moment_coeff_Nm_per_N_{};
   double max_motor_thrust_N_{};
-  std::array<double, 4> yaw_signs_{};
 
   std::unique_ptr<MotorAllocation> alloc_;
   std::unique_ptr<uav_adrc> adrc_pos_;
