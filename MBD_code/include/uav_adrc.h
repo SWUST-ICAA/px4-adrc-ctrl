@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'uav_adrc'.
 //
-// Model version                  : 1.4
+// Model version                  : 1.32
 // Simulink Coder version         : 24.2 (R2024b) 21-Jun-2024
-// C/C++ source code generated on : Mon Jan 26 10:26:51 2026
+// C/C++ source code generated on : Tue Jan 27 10:00:59 2026
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Intel->x86-64 (Linux 64)
@@ -26,116 +26,75 @@ class uav_adrc final
   // Block states (default storage) for system '<Root>'
   struct DW_uav_adrc_T {
     real_T UnitDelay_DSTATE[3];        // '<S25>/Unit Delay'
-    real_T UnitDelay_DSTATE_a[3];      // '<S14>/Unit Delay'
-    real_T UnitDelay_DSTATE_b[3];      // '<S47>/Unit Delay'
-    real_T UnitDelay_DSTATE_am[3];     // '<S69>/Unit Delay'
-    real_T UnitDelay_DSTATE_f[3];      // '<S36>/Unit Delay'
-    real_T UnitDelay_DSTATE_h[3];      // '<S58>/Unit Delay'
+    real_T UnitDelay_DSTATE_e[3];      // '<S47>/Unit Delay'
+    real_T UnitDelay_DSTATE_ey[3];     // '<S69>/Unit Delay'
+    real_T UnitDelay_DSTATE_n[3];      // '<S14>/Unit Delay'
+    real_T UnitDelay_DSTATE_a[3];      // '<S36>/Unit Delay'
+    real_T UnitDelay_DSTATE_g[3];      // '<S58>/Unit Delay'
   };
 
   // Constant parameters (default storage)
   struct ConstP_uav_adrc_T {
     // Pooled Parameter (Expression: ad)
     //  Referenced by:
+    //    '<S14>/Gain2'
     //    '<S25>/Gain2'
+    //    '<S36>/Gain2'
     //    '<S47>/Gain2'
+    //    '<S58>/Gain2'
     //    '<S69>/Gain2'
 
     real_T pooled2[9];
 
-    // Pooled Parameter (Expression: c)
-    //  Referenced by:
-    //    '<S14>/Gain'
-    //    '<S25>/Gain'
-    //    '<S36>/Gain'
-    //    '<S47>/Gain'
-    //    '<S58>/Gain'
-    //    '<S69>/Gain'
-
-    real_T pooled3[3];
-
     // Pooled Parameter (Expression: bd)
     //  Referenced by:
+    //    '<S14>/Gain3'
     //    '<S25>/Gain3'
+    //    '<S36>/Gain3'
     //    '<S47>/Gain3'
+    //    '<S58>/Gain3'
     //    '<S69>/Gain3'
 
     real_T pooled6[3];
 
     // Pooled Parameter (Expression: ad*ld)
     //  Referenced by:
+    //    '<S14>/Gain4'
     //    '<S25>/Gain4'
+    //    '<S36>/Gain4'
     //    '<S47>/Gain4'
+    //    '<S58>/Gain4'
     //    '<S69>/Gain4'
 
     real_T pooled7[3];
-
-    // Pooled Parameter (Expression: ad)
-    //  Referenced by:
-    //    '<S14>/Gain2'
-    //    '<S36>/Gain2'
-    //    '<S58>/Gain2'
-
-    real_T pooled8[9];
-
-    // Pooled Parameter (Expression: bd)
-    //  Referenced by:
-    //    '<S14>/Gain3'
-    //    '<S36>/Gain3'
-    //    '<S58>/Gain3'
-
-    real_T pooled11[3];
-
-    // Pooled Parameter (Expression: ad*ld)
-    //  Referenced by:
-    //    '<S14>/Gain4'
-    //    '<S36>/Gain4'
-    //    '<S58>/Gain4'
-
-    real_T pooled12[3];
   };
 
   // External inputs (root inport signals with default storage)
   struct ExtU_uav_adrc_T {
     real_T XPostionRef;                // '<Root>/X Postion Ref '
-    real_T XPositionState;             // '<Root>/X Position State'
-    real_T XAttitudeRef;               // '<Root>/X Attitude Ref'
-    real_T XAttitudeState;             // '<Root>/X Attitude State'
-    real_T YPostionRef;                // '<Root>/Y Postion Ref'
-    real_T YPositionState;             // '<Root>/Y Position State'
+    real_T YPostionRef;                // '<Root>/Y Postion Ref '
     real_T ZPostionRef;                // '<Root>/Z Postion Ref '
-    real_T ZPositionState;             // '<Root>/Z Position State'
-    real_T YAttitudeRef;               // '<Root>/Y Attitude Ref'
-    real_T YAttitudeState;             // '<Root>/Y Attitude State'
-    real_T ZAttitudeRef;               // '<Root>/Z Attitude Ref'
-    real_T ZAttitudeState;             // '<Root>/Z Attitude State'
+    real_T XPostionState;              // '<Root>/X Postion State'
+    real_T YPostionState;              // '<Root>/Y Postion State'
+    real_T ZPostionState;              // '<Root>/Z Postion State'
+    real_T q_ex;                       // '<Root>/q_ex'
+    real_T q_ey;                       // '<Root>/q_ey'
+    real_T q_ez;                       // '<Root>/q_ez'
   };
 
   // External outputs (root outports fed by signals with default storage)
   struct ExtY_uav_adrc_T {
     real_T XAcceleration;              // '<Root>/X Acceleration'
-    real_T XTorque;                    // '<Root>/X Torque'
     real_T YAcceleration;              // '<Root>/Y Acceleration'
     real_T ZAcceleration;              // '<Root>/Z Acceleration'
-    real_T YTorque;                    // '<Root>/Y Torque'
-    real_T ZTorque;                    // '<Root>/Z Torque'
+    real_T BodyXTorque;                // '<Root>/BodyXTorque'
+    real_T BodyYTorque;                // '<Root>/BodyYTorque'
+    real_T BodyZTorque;                // '<Root>/BodyZTorque'
   };
 
   // Real-time Model Data Structure
   struct RT_MODEL_uav_adrc_T {
     const char_T * volatile errorStatus;
-
-    //
-    //  Timing:
-    //  The following substructure contains information regarding
-    //  the timing information for the model.
-
-    struct {
-      struct {
-        uint8_T TID[2];
-      } TaskCounters;
-    } Timing;
-
     const char_T* getErrorStatus() const;
     void setErrorStatus(const char_T* const volatile aErrorStatus);
   };
@@ -203,6 +162,7 @@ extern const uav_adrc::ConstP_uav_adrc_T uav_adrc_ConstP;
 //-
 //  These blocks were eliminated from the model due to optimizations:
 //
+//  Block '<S13>/Gain' : Eliminated nontunable gain of 1
 //  Block '<S13>/Gain1' : Eliminated nontunable gain of 1
 //  Block '<S16>/Zero-Order Hold' : Eliminated since input and output rates are identical
 //  Block '<S17>/Zero-Order Hold' : Eliminated since input and output rates are identical
@@ -210,6 +170,7 @@ extern const uav_adrc::ConstP_uav_adrc_T uav_adrc_ConstP;
 //  Block '<S24>/Gain1' : Eliminated nontunable gain of 1
 //  Block '<S27>/Zero-Order Hold' : Eliminated since input and output rates are identical
 //  Block '<S28>/Zero-Order Hold' : Eliminated since input and output rates are identical
+//  Block '<S35>/Gain' : Eliminated nontunable gain of 1
 //  Block '<S35>/Gain1' : Eliminated nontunable gain of 1
 //  Block '<S38>/Zero-Order Hold' : Eliminated since input and output rates are identical
 //  Block '<S39>/Zero-Order Hold' : Eliminated since input and output rates are identical
@@ -217,6 +178,7 @@ extern const uav_adrc::ConstP_uav_adrc_T uav_adrc_ConstP;
 //  Block '<S46>/Gain1' : Eliminated nontunable gain of 1
 //  Block '<S49>/Zero-Order Hold' : Eliminated since input and output rates are identical
 //  Block '<S50>/Zero-Order Hold' : Eliminated since input and output rates are identical
+//  Block '<S57>/Gain' : Eliminated nontunable gain of 1
 //  Block '<S57>/Gain1' : Eliminated nontunable gain of 1
 //  Block '<S60>/Zero-Order Hold' : Eliminated since input and output rates are identical
 //  Block '<S61>/Zero-Order Hold' : Eliminated since input and output rates are identical
