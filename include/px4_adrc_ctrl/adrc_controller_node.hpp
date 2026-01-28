@@ -46,7 +46,7 @@ private:
   void on_timer();
   void maybe_request_offboard(const rclcpp::Time &now, bool armed, bool offboard, bool inputs_ok);
 
-  void publish_offboard_mode(const rclcpp::Time &now);
+  void publish_offboard_mode(const rclcpp::Time &now, bool armed);
   void publish_idle_outputs(const rclcpp::Time &now);
   void publish_nan_outputs(const rclcpp::Time &now);
   void publish_trajectory_trigger(const rclcpp::Time &now);
@@ -64,7 +64,6 @@ private:
   double rate_hz_{};
   int odom_timeout_ms_{};
   int setpoint_timeout_ms_{};
-  int status_timeout_ms_{};
 
   bool auto_offboard_enabled_{};
   int offboard_warmup_ms_{};

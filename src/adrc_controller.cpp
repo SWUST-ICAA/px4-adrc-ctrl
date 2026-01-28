@@ -199,7 +199,7 @@ AdrcControllerNode::AdrcControllerNode() : rclcpp::Node("px4_adrc_controller")
 {
   // Topics
   odom_topic_ = declare_parameter<std::string>("topics.vehicle_odometry", "/fmu/out/vehicle_odometry");
-  status_topic_ = declare_parameter<std::string>("topics.vehicle_status", "/fmu/out/vehicle_status");
+  status_topic_ = declare_parameter<std::string>("topics.vehicle_status", "/fmu/out/vehicle_status_v1");
   traj_topic_ = declare_parameter<std::string>("topics.trajectory_setpoint", "/adrc/trajectory_setpoint");
   offboard_mode_topic_ =
     declare_parameter<std::string>("topics.offboard_control_mode", "/fmu/in/offboard_control_mode");
@@ -214,7 +214,6 @@ AdrcControllerNode::AdrcControllerNode() : rclcpp::Node("px4_adrc_controller")
   rate_hz_ = declare_parameter<double>("control.rate_hz", 1000.0);
   odom_timeout_ms_ = declare_parameter<int>("control.odom_timeout_ms", 200);
   setpoint_timeout_ms_ = declare_parameter<int>("control.setpoint_timeout_ms", 200);
-  status_timeout_ms_ = declare_parameter<int>("control.status_timeout_ms", 500);
 
   // Automatic Offboard switch (arming is manual).
   auto_offboard_enabled_ = declare_parameter<bool>("offboard.auto_switch", true);
@@ -300,8 +299,6 @@ void AdrcControllerNode::on_timer()
 {
   const rclcpp::Time now = get_clock()->now();
 
-  publish_offboard_mode(now);
-
   // Snapshot inputs.
   px4_msgs::msg::VehicleOdometry odom{};
   px4_msgs::msg::TrajectorySetpoint traj{};
@@ -328,11 +325,12 @@ void AdrcControllerNode::on_timer()
 
   const bool odom_ok = have_odom && ((now - odom_rx_time).nanoseconds() / 1000000LL <= odom_timeout_ms_);
   const bool sp_ok = have_traj && ((now - traj_rx_time).nanoseconds() / 1000000LL <= setpoint_timeout_ms_);
-  const bool status_ok = have_status && ((now - status_rx_time).nanoseconds() / 1000000LL <= status_timeout_ms_);
-
-  const bool armed = status_ok && (status.arming_state == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED);
-  const bool offboard = status_ok && (status.nav_state == px4_msgs::msg::VehicleStatus::NAVIGATION_STATE_OFFBOARD);
+  // Use last known arming/nav state even if status is momentarily stale to keep offboard stream stable.
+  const bool armed = have_status && (status.arming_state == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED);
+  const bool offboard = have_status && (status.nav_state == px4_msgs::msg::VehicleStatus::NAVIGATION_STATE_OFFBOARD);
   const bool inputs_ok_for_offboard = odom_ok;  // before trajectory, only odom is required
+
+  publish_offboard_mode(now, armed);
 
   // Mission phase transitions.
   if (!armed) {
@@ -361,10 +359,10 @@ void AdrcControllerNode::on_timer()
   // Automatic OFFBOARD switch once armed and odom is valid.
   maybe_request_offboard(now, armed, offboard, inputs_ok_for_offboard);
 
-  // Before OFFBOARD, only publish idle/nan (do not try to control).
+  // Before OFFBOARD, only publish idle outputs (do not try to control).
   if (!armed || !offboard || !odom_ok) {
     // Automatic safe behavior:
-    // - Disarmed: publish NaN (stop/disarmed).
+    // - Disarmed: publish zero motor setpoints (stop/disarmed).
     // - Armed but not in OFFBOARD yet: publish zero motor setpoints (keeps streaming inputs for OFFBOARD).
     if (armed) {
       publish_idle_outputs(now);
@@ -489,14 +487,13 @@ void AdrcControllerNode::on_timer()
   const Eigen::Vector4d wrench(T_N, tau_body_Nm.x(), tau_body_Nm.y(), tau_body_Nm.z());
   const Eigen::Vector4d f_N = alloc_->allocate_with_torque_scaling(wrench, 0.0, max_motor_thrust_N_);
 
-  // Publish ActuatorMotors (unused channels set to NaN = disarmed).
+  // Publish ActuatorMotors (unused channels set to 0.0).
   px4_msgs::msg::ActuatorMotors motors_msg{};
   motors_msg.timestamp = to_us(now);
   motors_msg.timestamp_sample = motors_msg.timestamp;
   motors_msg.reversible_flags = 0;
-  const float nan = std::numeric_limits<float>::quiet_NaN();
   for (int i = 0; i < px4_msgs::msg::ActuatorMotors::NUM_CONTROLS; i++) {
-    motors_msg.control[i] = nan;
+    motors_msg.control[i] = 0.0f;
   }
   for (int i = 0; i < 4; i++) {
     const double u = std::clamp(f_N[i] / max_motor_thrust_N_, 0.0, 1.0);
@@ -518,7 +515,7 @@ void AdrcControllerNode::on_timer()
 }
 
 /**
- * @brief Request OFFBOARD via VEHICLE_CMD_SET_NAV_STATE (arming remains manual).
+ * @brief Request OFFBOARD via VEHICLE_CMD_DO_SET_MODE (arming remains manual).
  * @param now Current time.
  * @param armed True if vehicle is armed.
  * @param offboard True if already in offboard.
@@ -555,10 +552,15 @@ void AdrcControllerNode::maybe_request_offboard(const rclcpp::Time &now, bool ar
     }
   }
 
+  // PX4 custom main mode for OFFBOARD is 6.
+  constexpr float kMavModeFlagCustomEnabled = 1.0f;
+  constexpr float kPx4CustomMainModeOffboard = 6.0f;
+
   px4_msgs::msg::VehicleCommand cmd{};
   cmd.timestamp = to_us(now);
-  cmd.param1 = static_cast<float>(px4_msgs::msg::VehicleStatus::NAVIGATION_STATE_OFFBOARD);
-  cmd.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_SET_NAV_STATE;
+  cmd.param1 = kMavModeFlagCustomEnabled;
+  cmd.param2 = kPx4CustomMainModeOffboard;
+  cmd.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_DO_SET_MODE;
   cmd.target_system = static_cast<uint8_t>(std::clamp(target_system_, 0, 255));
   cmd.target_component = static_cast<uint8_t>(std::clamp(target_component_, 0, 255));
   cmd.source_system = static_cast<uint8_t>(std::clamp(source_system_, 0, 255));
@@ -571,10 +573,10 @@ void AdrcControllerNode::maybe_request_offboard(const rclcpp::Time &now, bool ar
 }
 
 /**
- * @brief Publish OffboardControlMode with direct_actuator enabled.
+ * @brief Publish OffboardControlMode, enabling direct_actuator only when armed.
  * @param now Current time.
  */
-void AdrcControllerNode::publish_offboard_mode(const rclcpp::Time &now)
+void AdrcControllerNode::publish_offboard_mode(const rclcpp::Time &now, bool armed)
 {
   px4_msgs::msg::OffboardControlMode msg{};
   msg.timestamp = to_us(now);
@@ -584,7 +586,7 @@ void AdrcControllerNode::publish_offboard_mode(const rclcpp::Time &now)
   msg.attitude = false;
   msg.body_rate = false;
   msg.thrust_and_torque = false;
-  msg.direct_actuator = true;
+  msg.direct_actuator = armed;
   offboard_mode_pub_->publish(msg);
 }
 
@@ -598,9 +600,8 @@ void AdrcControllerNode::publish_idle_outputs(const rclcpp::Time &now)
   motors_msg.timestamp = to_us(now);
   motors_msg.timestamp_sample = motors_msg.timestamp;
   motors_msg.reversible_flags = 0;
-  const float nan = std::numeric_limits<float>::quiet_NaN();
   for (int i = 0; i < px4_msgs::msg::ActuatorMotors::NUM_CONTROLS; i++) {
-    motors_msg.control[i] = nan;
+    motors_msg.control[i] = 0.0f;
   }
   for (int i = 0; i < 4; i++) {
     motors_msg.control[i] = 0.0f;
@@ -617,7 +618,7 @@ void AdrcControllerNode::publish_idle_outputs(const rclcpp::Time &now)
 }
 
 /**
- * @brief Publish NaN motor commands (disarm/stop) without thrust setpoint.
+ * @brief Publish zero motor commands (disarm/stop) without thrust setpoint.
  * @param now Current time.
  */
 void AdrcControllerNode::publish_nan_outputs(const rclcpp::Time &now)
@@ -626,9 +627,8 @@ void AdrcControllerNode::publish_nan_outputs(const rclcpp::Time &now)
   motors_msg.timestamp = to_us(now);
   motors_msg.timestamp_sample = motors_msg.timestamp;
   motors_msg.reversible_flags = 0;
-  const float nan = std::numeric_limits<float>::quiet_NaN();
   for (int i = 0; i < px4_msgs::msg::ActuatorMotors::NUM_CONTROLS; i++) {
-    motors_msg.control[i] = nan;
+    motors_msg.control[i] = 0.0f;
   }
   motors_pub_->publish(motors_msg);
 

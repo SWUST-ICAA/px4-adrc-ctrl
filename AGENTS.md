@@ -44,3 +44,5 @@ When used inside a larger PX4/ROS 2 workspace, build with that workspace’s nor
 - PRs should explain whether changes are regenerated output vs. hand edits, and (if regenerated) include the Simulink model/version and regeneration settings used.
 
 ## 使用中文回答我，并且每次告诉我你做了什么
+
+## 编译请你注意位置，当前是功能包内，不要在这里编译
