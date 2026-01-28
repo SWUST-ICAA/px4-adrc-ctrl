@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 #include "px4_adrc_ctrl/adrc_controller_node.hpp"
 
 #include "rclcpp/rclcpp.hpp"
