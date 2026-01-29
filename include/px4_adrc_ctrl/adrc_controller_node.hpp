@@ -74,7 +74,6 @@ private:
 
   double takeoff_height_m_{};
   double takeoff_reached_tol_m_{};
-  double takeoff_yaw_rad_{};
   int trigger_pulse_ms_{};
   int trigger_period_ms_{};
 
@@ -121,6 +120,7 @@ private:
   MissionPhase phase_{MissionPhase::kWaitArmed};
   bool takeoff_origin_valid_{false};
   std::array<double, 3> takeoff_origin_ned_{};
+  double takeoff_yaw_rad_{0.0};
   std::optional<rclcpp::Time> trigger_start_time_{};
   std::optional<rclcpp::Time> last_trigger_pub_time_{};
 };

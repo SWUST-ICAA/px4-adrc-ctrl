@@ -29,7 +29,6 @@ px4_adrc_controller:
       # Take off to this height above the arming position (meters, positive up).
       height_m: 1.0
       reached_tol_m: 0.1
-      yaw_rad: 0.0
 
     trigger:
       # Publish std_msgs/Bool(data=true) for this duration after takeoff.

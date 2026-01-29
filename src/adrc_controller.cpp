@@ -96,6 +96,17 @@ Eigen::Quaterniond attitude_from_b3_yaw(const Eigen::Vector3d &b3_w, double yaw_
   return q;
 }
 
+/**
+ * @brief Extract yaw (NED, radians) from body->world quaternion.
+ * @param q Body->world quaternion (w,x,y,z).
+ * @return Yaw angle in radians.
+ */
+double yaw_from_quat_wxyz(const Eigen::Quaterniond &q)
+{
+  const Eigen::Matrix3d R_wb = q.normalized().toRotationMatrix();
+  return std::atan2(R_wb(1, 0), R_wb(0, 0));
+}
+
 }  // namespace
 
 /**
@@ -225,7 +236,6 @@ AdrcControllerNode::AdrcControllerNode() : rclcpp::Node("px4_adrc_controller")
   // Takeoff / trigger
   takeoff_height_m_ = declare_parameter<double>("takeoff.height_m", 1.0);
   takeoff_reached_tol_m_ = declare_parameter<double>("takeoff.reached_tol_m", 0.1);
-  takeoff_yaw_rad_ = declare_parameter<double>("takeoff.yaw_rad", 0.0);
   trigger_pulse_ms_ = declare_parameter<int>("trigger.pulse_ms", 500);
   trigger_period_ms_ = declare_parameter<int>("trigger.period_ms", 100);
 
@@ -395,6 +405,9 @@ void AdrcControllerNode::on_timer()
       takeoff_origin_ned_[0] = static_cast<double>(odom.position[0]);
       takeoff_origin_ned_[1] = static_cast<double>(odom.position[1]);
       takeoff_origin_ned_[2] = static_cast<double>(odom.position[2]);
+      const Eigen::Quaterniond q_curr =
+        quat_from_px4_wxyz({odom.q[0], odom.q[1], odom.q[2], odom.q[3]}).normalized();
+      takeoff_yaw_rad_ = yaw_from_quat_wxyz(q_curr);
       takeoff_origin_valid_ = true;
     }
     eff_sp.position[0] = static_cast<float>(takeoff_origin_ned_[0]);
