@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'uav_adrc'.
 //
-// Model version                  : 1.34
+// Model version                  : 1.35
 // Simulink Coder version         : 24.2 (R2024b) 21-Jun-2024
-// C/C++ source code generated on : Fri Jan 30 12:50:42 2026
+// C/C++ source code generated on : Fri Jan 30 19:44:29 2026
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Intel->x86-64 (Linux 64)
@@ -207,11 +207,11 @@ void uav_adrc::step()
   //   Sum: '<S14>/Add'
   //   UnitDelay: '<S14>/Unit Delay'
 
-  rtb_Gain1 = (((0.0 - (0.21337213893344664 * rtb_Gain2 +
-                        uav_adrc_DW.UnitDelay_DSTATE_n[0])) * 51.84 -
-                (17.051588570559442 * rtb_Gain2 +
-                 uav_adrc_DW.UnitDelay_DSTATE_n[1]) * 14.4) - (454.4666721732579
-    * rtb_Gain2 + uav_adrc_DW.UnitDelay_DSTATE_n[2])) * 0.023255813953488372;
+  rtb_Gain1 = (((0.0 - (0.25918177931828223 * rtb_Gain2 +
+                        uav_adrc_DW.UnitDelay_DSTATE_n[0])) * 49.0 -
+                (25.875074351664683 * rtb_Gain2 +
+                 uav_adrc_DW.UnitDelay_DSTATE_n[1]) * 14.0) - (861.784444348992 *
+    rtb_Gain2 + uav_adrc_DW.UnitDelay_DSTATE_n[2])) * 0.023255813953488372;
 
   // UnitDelay: '<S14>/Unit Delay' incorporates:
   //   Gain: '<S14>/Gain2'
@@ -263,11 +263,11 @@ void uav_adrc::step()
   //   Sum: '<S36>/Add'
   //   UnitDelay: '<S36>/Unit Delay'
 
-  rtb_Gain1 = (((0.0 - (0.21337213893344664 * rtb_Gain2 +
-                        uav_adrc_DW.UnitDelay_DSTATE_a[0])) * 51.84 -
-                (17.051588570559442 * rtb_Gain2 +
-                 uav_adrc_DW.UnitDelay_DSTATE_a[1]) * 14.4) - (454.4666721732579
-    * rtb_Gain2 + uav_adrc_DW.UnitDelay_DSTATE_a[2])) * 0.023255813953488372;
+  rtb_Gain1 = (((0.0 - (0.25918177931828223 * rtb_Gain2 +
+                        uav_adrc_DW.UnitDelay_DSTATE_a[0])) * 49.0 -
+                (25.875074351664683 * rtb_Gain2 +
+                 uav_adrc_DW.UnitDelay_DSTATE_a[1]) * 14.0) - (861.784444348992 *
+    rtb_Gain2 + uav_adrc_DW.UnitDelay_DSTATE_a[2])) * 0.023255813953488372;
 
   // UnitDelay: '<S36>/Unit Delay' incorporates:
   //   Gain: '<S36>/Gain2'

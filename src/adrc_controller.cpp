@@ -338,14 +338,13 @@ void AdrcControllerNode::on_timer()
   const bool offboard = have_status && (status.nav_state == px4_msgs::msg::VehicleStatus::NAVIGATION_STATE_OFFBOARD);
   const bool inputs_ok_for_offboard = odom_ok;  // before trajectory, only odom is required
 
-  publish_offboard_mode(now, armed);
-
   // Mission phase transitions.
   if (!armed) {
     phase_ = MissionPhase::kWaitArmed;
     takeoff_origin_valid_ = false;
     trigger_start_time_.reset();
     last_trigger_pub_time_.reset();
+    offboard_was_active_ = false;
   }
   if (phase_ == MissionPhase::kWaitArmed && armed) {
     phase_ = MissionPhase::kWaitOffboard;
@@ -363,6 +362,17 @@ void AdrcControllerNode::on_timer()
     trigger_start_time_.reset();
     last_trigger_pub_time_.reset();
   }
+
+  if (offboard) {
+    offboard_was_active_ = true;
+  }
+
+  const bool stop_control_publish = offboard_was_active_ && !offboard;
+  if (stop_control_publish) {
+    return;
+  }
+
+  publish_offboard_mode(now, armed);
 
   // Automatic OFFBOARD switch once armed and odom is valid.
   maybe_request_offboard(now, armed, offboard, inputs_ok_for_offboard);
@@ -466,7 +476,18 @@ void AdrcControllerNode::on_timer()
   adrc_pos_->setExternalInputs(&in_pos);
   adrc_pos_->step();
   const auto out_pos = adrc_pos_->getExternalOutputs();
-  const Eigen::Vector3d a_cmd_ned(out_pos.XAcceleration, out_pos.YAcceleration, out_pos.ZAcceleration);
+  Eigen::Vector3d a_cmd_ned(out_pos.XAcceleration, out_pos.YAcceleration, out_pos.ZAcceleration);
+
+  // Linear acceleration feed-forward (TrajectorySetpoint), only during tracking.
+  if (phase_ == MissionPhase::kTrack && sp_ok) {
+    const double ax_ff =
+      is_finite(eff_sp.acceleration[0]) ? static_cast<double>(eff_sp.acceleration[0]) : 0.0;
+    const double ay_ff =
+      is_finite(eff_sp.acceleration[1]) ? static_cast<double>(eff_sp.acceleration[1]) : 0.0;
+    const double az_ff =
+      is_finite(eff_sp.acceleration[2]) ? static_cast<double>(eff_sp.acceleration[2]) : 0.0;
+    a_cmd_ned += Eigen::Vector3d(ax_ff, ay_ff, az_ff);
+  }
 
   // 2) Desired attitude from thrust vector (accel command + yaw).
   const double yaw_des = is_finite(eff_sp.yaw) ? static_cast<double>(eff_sp.yaw) : 0.0;

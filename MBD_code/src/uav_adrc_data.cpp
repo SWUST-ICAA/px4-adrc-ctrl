@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'uav_adrc'.
 //
-// Model version                  : 1.34
+// Model version                  : 1.35
 // Simulink Coder version         : 24.2 (R2024b) 21-Jun-2024
-// C/C++ source code generated on : Fri Jan 30 12:50:42 2026
+// C/C++ source code generated on : Fri Jan 30 19:44:29 2026
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Intel->x86-64 (Linux 64)
@@ -55,7 +55,7 @@ const uav_adrc::ConstP_uav_adrc_T uav_adrc_ConstP{
   //    '<S14>/Gain4'
   //    '<S36>/Gain4'
 
-  { 0.23065096084009271, 17.5060552427327, 454.4666721732579 },
+  { 0.28548774589212145, 26.736858796013674, 861.784444348992 },
 
   // Expression: bd
   //  Referenced by: '<S58>/Gain3'

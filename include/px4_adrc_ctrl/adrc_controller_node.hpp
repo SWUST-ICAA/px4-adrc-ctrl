@@ -116,6 +116,9 @@ private:
   std::optional<rclcpp::Time> offboard_warmup_start_time_{};
   std::optional<rclcpp::Time> last_offboard_cmd_time_{};
 
+  // Track whether OFFBOARD has ever been active since last disarm.
+  bool offboard_was_active_{false};
+
   // Mission state
   MissionPhase phase_{MissionPhase::kWaitArmed};
   bool takeoff_origin_valid_{false};
