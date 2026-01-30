@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'uav_adrc'.
 //
-// Model version                  : 1.33
+// Model version                  : 1.34
 // Simulink Coder version         : 24.2 (R2024b) 21-Jun-2024
-// C/C++ source code generated on : Thu Jan 29 11:39:39 2026
+// C/C++ source code generated on : Fri Jan 30 12:50:42 2026
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Intel->x86-64 (Linux 64)
@@ -39,14 +39,9 @@ const uav_adrc::ConstP_uav_adrc_T uav_adrc_ConstP{
   //  Referenced by:
   //    '<S25>/Gain4'
   //    '<S47>/Gain4'
-  //    '<S58>/Gain4'
+  //    '<S69>/Gain4'
 
-  { 0.0089865134898809776, 0.026905702166335706, 0.026878803204032076 },
-
-  // Expression: ad*ld
-  //  Referenced by: '<S69>/Gain4'
-
-  { 0.017946107838194156, 0.10724722933747736, 0.21406568510806817 },
+  { 0.014962562421953075, 0.074564058213000814, 0.12406639455918825 },
 
   // Pooled Parameter (Expression: bd)
   //  Referenced by:
@@ -60,12 +55,17 @@ const uav_adrc::ConstP_uav_adrc_T uav_adrc_ConstP{
   //    '<S14>/Gain4'
   //    '<S36>/Gain4'
 
-  { 0.074070263915002141, 1.8212757878504591, 15.051088591129274 },
+  { 0.23065096084009271, 17.5060552427327, 454.4666721732579 },
 
   // Expression: bd
   //  Referenced by: '<S58>/Gain3'
 
-  { 1.2499999999999999E-5, 0.025, 0.0 }
+  { 1.2499999999999999E-5, 0.025, 0.0 },
+
+  // Expression: ad*ld
+  //  Referenced by: '<S58>/Gain4'
+
+  { 0.020926671200294712, 0.14580547946467715, 0.33941942080752585 }
 };
 
 //

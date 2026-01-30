@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'uav_adrc'.
 //
-// Model version                  : 1.33
+// Model version                  : 1.34
 // Simulink Coder version         : 24.2 (R2024b) 21-Jun-2024
-// C/C++ source code generated on : Thu Jan 29 11:39:39 2026
+// C/C++ source code generated on : Fri Jan 30 12:50:42 2026
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: Intel->x86-64 (Linux 64)
@@ -52,39 +52,39 @@ class uav_adrc final
     //    '<S47>/Gain3'
     //    '<S69>/Gain3'
 
-    real_T pooled7[3];
+    real_T pooled6[3];
 
     // Pooled Parameter (Expression: ad*ld)
     //  Referenced by:
     //    '<S25>/Gain4'
     //    '<S47>/Gain4'
-    //    '<S58>/Gain4'
+    //    '<S69>/Gain4'
 
-    real_T pooled8[3];
-
-    // Expression: ad*ld
-    //  Referenced by: '<S69>/Gain4'
-
-    real_T Gain4_Gain[3];
+    real_T pooled7[3];
 
     // Pooled Parameter (Expression: bd)
     //  Referenced by:
     //    '<S14>/Gain3'
     //    '<S36>/Gain3'
 
-    real_T pooled14[3];
+    real_T pooled13[3];
 
     // Pooled Parameter (Expression: ad*ld)
     //  Referenced by:
     //    '<S14>/Gain4'
     //    '<S36>/Gain4'
 
-    real_T pooled15[3];
+    real_T pooled14[3];
 
     // Expression: bd
     //  Referenced by: '<S58>/Gain3'
 
     real_T Gain3_Gain[3];
+
+    // Expression: ad*ld
+    //  Referenced by: '<S58>/Gain4'
+
+    real_T Gain4_Gain[3];
   };
 
   // External inputs (root inport signals with default storage)
@@ -182,15 +182,16 @@ extern const uav_adrc::ConstP_uav_adrc_T uav_adrc_ConstP;
 //
 //  Block '<S16>/Zero-Order Hold' : Eliminated since input and output rates are identical
 //  Block '<S17>/Zero-Order Hold' : Eliminated since input and output rates are identical
+//  Block '<S24>/Gain' : Eliminated nontunable gain of 1
 //  Block '<S24>/Gain1' : Eliminated nontunable gain of 1
 //  Block '<S27>/Zero-Order Hold' : Eliminated since input and output rates are identical
 //  Block '<S28>/Zero-Order Hold' : Eliminated since input and output rates are identical
 //  Block '<S38>/Zero-Order Hold' : Eliminated since input and output rates are identical
 //  Block '<S39>/Zero-Order Hold' : Eliminated since input and output rates are identical
+//  Block '<S46>/Gain' : Eliminated nontunable gain of 1
 //  Block '<S46>/Gain1' : Eliminated nontunable gain of 1
 //  Block '<S49>/Zero-Order Hold' : Eliminated since input and output rates are identical
 //  Block '<S50>/Zero-Order Hold' : Eliminated since input and output rates are identical
-//  Block '<S57>/Gain' : Eliminated nontunable gain of 1
 //  Block '<S60>/Zero-Order Hold' : Eliminated since input and output rates are identical
 //  Block '<S61>/Zero-Order Hold' : Eliminated since input and output rates are identical
 //  Block '<S68>/Gain1' : Eliminated nontunable gain of 1
